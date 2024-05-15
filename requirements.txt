@@ -1,0 +1,6 @@
+entsoe-py
+pandas
+polars
+python-dotenv
+matplotlib
+streamlit
