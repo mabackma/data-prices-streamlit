@@ -5,51 +5,51 @@ import os
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 from data_analyzer import DataAnalyzer
-
-def create_prices_csv():
-    load_dotenv()
-    api_key = os.getenv("ENTSOE_API_KEY")
-    client = EntsoePandasClient(api_key=api_key)
-
-    start = pd.Timestamp('2023-11-01', tz='Europe/Helsinki')
-    end = pd.Timestamp('2024-05-14', tz='Europe/Helsinki')
-    country_code = 'FI'
-
-    # methods that return Pandas Series
-    ts = client.query_day_ahead_prices(country_code, start=start, end=end)
-    ts.to_csv('prices.csv')
+import streamlit as st
 
 
-def create_dataframe():
-    # Scan CSV file for price dataframe
-    df_prices = pl.scan_csv(
-        'prices.csv',
-        new_columns=["ts", "price"],
-        dtypes=[pl.Datetime, pl.Float32],
-    ).collect()
-    df_prices = df_prices.with_columns(pl.col('ts').dt.hour().alias('hour'))
-    df_prices = df_prices.with_columns(pl.col('ts').dt.date().alias('date'))
-
-    # Scan parquet file for data dataframe
-    df_data = pl.scan_parquet('all_data_compressed_zstd_1698789601000-1715547590000.parquet').collect()
-    df_data = df_data.with_columns(pl.col('ts').dt.hour().alias('hour'))
-    df_data = df_data.with_columns(pl.col('ts').dt.date().alias('date'))
-
-    # Merge df_prices['price'] into df_data based on 'hour' and 'date' columns
-    df_all_data = df_data.join(df_prices.select(['hour', 'date', 'price']), on=['hour', 'date'], how='left')
-    df_all_data = df_all_data.rename({'ts': 'ts_micro'})
-    df_all_data = df_all_data.with_columns(ts=pl.col('ts_micro').cast(pl.Datetime('ms')))
-    df_all_data = df_all_data.drop('ts_micro')
-    df_all_data = df_all_data.drop('hour')
-    df_all_data = df_all_data.drop('date')
-
-    selected_columns = ['ts', 'meter_id'] + [col for col in df_all_data.columns if col != 'ts' and col != 'meter_id']
-    df_all_data = df_all_data.select(selected_columns)
-    return df_all_data
-    # Save all data to parquet file
-    # df_all_data.write_parquet('all_data_with_price.parquet', compression='gzip')
+# Function to read large parquet file
+def read_large_parquet(file):
+    df = pd.read_parquet(file)
+    return df
 
 
+st.set_page_config(layout="wide")
+st.write('<h3>Place your parquet file here</h3>', unsafe_allow_html=True)
+
+# File uploader for parquet file
+uploaded_file = st.file_uploader("Choose a file", type=["parquet"])
+
+if uploaded_file is not None:
+    # Display file details
+    st.write("Filename:", uploaded_file.name)
+    st.write("File size:", uploaded_file.size, "bytes")
+
+    # Read and process the file
+    with st.spinner('Reading the file...'):
+        df = read_large_parquet(uploaded_file)
+
+
+
+    st.success('File successfully read!')
+
+    # Create df_L1_L2_L3 and df_total dataframes
+    total_columns = ['Total current', 'Total active power', 'Total apparent power',
+                           'Total active energy', 'Total active returned energy']
+    df_L1_L2_L3 = df.drop(total_columns, axis=1)
+    data_columns = ['L1 current', 'L1 voltage', 'L1 active power', 'L1 apparent power', 'L1 Power factor',
+                        'L1 frequency', 'L1 total active energy', 'L1 total active returned energy',
+                        'L2 current', 'L2 voltage', 'L2 active power', 'L2 apparent power', 'L2 Power factor',
+                        'L2 frequency', 'L2 total active energy',
+                        'L3 current', 'L3 voltage', 'L3 active power', 'L3 apparent power', 'L3 Power factor',
+                        'L3 frequency', 'L3 total active energy', 'L3 total active returned energy_right']
+    df_total = df.drop(data_columns, axis=1)
+
+    st.write('<h3>L1, L2, L3 values:</h3>', unsafe_allow_html=True)
+    st.write(df_L1_L2_L3.head())
+    st.write('<h3>Total values:</h3>', unsafe_allow_html=True)
+    st.write(df_total.head())
+'''''
 def show_options():
     choice = input('\n1. list columns\n2. sample\n3. describe\n4. SQL query\nq. exit\naction: ')
     return choice
@@ -92,3 +92,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+'''''
