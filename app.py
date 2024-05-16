@@ -25,10 +25,9 @@ def show_options():
     return selected_option
 
 
-#TODO Fix scan!
+
 # Function to read large parquet file
 def scan_large_parquet(file):
-    #df_scan = pl.scan_parquet(file).collect()
     df_scan = pl.read_parquet(file)
     return df_scan
 
