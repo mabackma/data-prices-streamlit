@@ -1,4 +1,9 @@
-import polars as pl
+import streamlit as st
+
+
+def callback_query():
+    st.session_state.query_button_clicked = True
+
 
 class DataAnalyzer:
     def __init__(self, dataframe):
@@ -6,10 +11,8 @@ class DataAnalyzer:
 
 
     def list_columns(self):
-        columns = ''
         for column in self.dataframe.columns:
-            columns += f'    {column}\n'
-        return columns
+            st.write(column)
 
 
     def show_sample(self):
@@ -21,8 +24,11 @@ class DataAnalyzer:
 
 
     def query_with_sql(self):
-        query = input("\nEnter the SQL query: ")
-        result = self.dataframe.sql(query)
+        query_string = st.text_input('Enter the SQL query:')
+        st.button('Click here to see the results', on_click=callback_query)
 
-        print("\nResult of SQL query:")
-        print(result)
+        if st.session_state.query_button_clicked:
+            result = self.dataframe.sql(query_string)
+
+            st.write('<h3>Result of SQL query:</h3>', unsafe_allow_html=True)
+            st.write(result)
