@@ -24,11 +24,12 @@ def show_options():
     selected_option = st.radio('Select Action', list(options))
     return selected_option
 
-
+#TODO Fix scan!
 # Function to read large parquet file
-def read_large_parquet(file):
-    df_read = pl.read_parquet(file)
-    return df_read
+def scan_large_parquet(file):
+    #df_scan = pl.scan_parquet(file).collect()
+    df_scan = pl.read_parquet(file)
+    return df_scan
 
 
 st.set_page_config(layout="wide")
@@ -46,7 +47,7 @@ if uploaded_file is not None:
 
     # Read and process the file
     with st.spinner('Reading the file...'):
-        df_all = read_large_parquet(uploaded_file)
+        df_all = scan_large_parquet(uploaded_file)
 
     st.success('File successfully read!')
 
