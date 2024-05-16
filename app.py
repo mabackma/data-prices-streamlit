@@ -8,6 +8,31 @@ from data_analyzer import DataAnalyzer
 import streamlit as st
 
 
+def callback_action():
+    st.session_state.action_button_clicked = True
+
+
+def initialize_state():
+    if "action_button_clicked" not in st.session_state:
+        st.session_state.action_button_clicked = False
+
+
+def reset_state():
+    st.session_state.action_button_clicked = False
+
+
+def choose_dataframe():
+    options = ['', 'L1, L2, L3 values', 'Total Values']
+    selected_option = st.radio("Select Dataframe to analyze", list(options))
+    return selected_option
+
+
+def show_options():
+    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query']
+    selected_option = st.radio("Select Action", list(options))
+    return selected_option
+
+
 # Function to read large parquet file
 def read_large_parquet(file):
     df = pd.read_parquet(file)
@@ -15,6 +40,8 @@ def read_large_parquet(file):
 
 
 st.set_page_config(layout="wide")
+initialize_state()
+
 st.write('<h3>Place your parquet file here</h3>', unsafe_allow_html=True)
 
 # File uploader for parquet file
@@ -28,8 +55,6 @@ if uploaded_file is not None:
     # Read and process the file
     with st.spinner('Reading the file...'):
         df = read_large_parquet(uploaded_file)
-
-
 
     st.success('File successfully read!')
 
@@ -49,47 +74,31 @@ if uploaded_file is not None:
     st.write(df_L1_L2_L3.head())
     st.write('<h3>Total values:</h3>', unsafe_allow_html=True)
     st.write(df_total.head())
-'''''
-def show_options():
-    choice = input('\n1. list columns\n2. sample\n3. describe\n4. SQL query\nq. exit\naction: ')
-    return choice
 
+    chosen_dataframe = choose_dataframe()
 
-def main():
-    df = create_dataframe()
-    print(df.head())
-    print(f'Rows: {df.height}')
+    df = None
+    if chosen_dataframe == 'L1, L2, L3 values':
+        df = df_L1_L2_L3
+    if chosen_dataframe == 'Total values':
+        df = df_total
 
-    analyzer = DataAnalyzer(df)
+    if df is not None:
+        analyzer = DataAnalyzer(df)
 
-    while True:
         action = show_options()
 
-        if action == '1':
-            print('\nColumns in the DataFrame:')
-            print(analyzer.list_columns())
-        if action == '2':
-            print('\nSample of the DataFrame:')
-            print(analyzer.show_sample())
-        if action == '3':
-            print("\nSummary statistics of the DataFrame:")
-            print(analyzer.describe_dataframe())
-        if action == '4':
-            analyzer.query_with_sql()
-        if action == 'q':
-            # Plotting time vs. price
-            plt.figure(figsize=(10, 6))
-            plt.plot(df['ts'].to_numpy(), df['price'].to_numpy(), linestyle='-')
-            plt.title('Price Over Time')
-            plt.xlabel('Date')
-            plt.ylabel('Price')
-            plt.grid(True)
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            plt.show()
-            break
+        if action == 'List columns':
+            st.write('<h3>Columns in the DataFrame:</h3>', unsafe_allow_html=True)
+            st.write(analyzer.list_columns())
+        if action == 'Sample':
+            st.write('<h3>Sample from the DataFrame:</h3>', unsafe_allow_html=True)
+            st.write(analyzer.show_sample())
+        if action == 'Describe':
+            st.write("<h3>Summary statistics of the DataFrame:</h3>", unsafe_allow_html=True)
+            st.write(analyzer.describe_dataframe())
+        if action == 'SQL query':
+            #analyzer.query_with_sql()
+            pass
 
 
-if __name__ == '__main__':
-    main()
-'''''
