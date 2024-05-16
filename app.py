@@ -24,6 +24,7 @@ def show_options():
     selected_option = st.radio('Select Action', list(options))
     return selected_option
 
+
 #TODO Fix scan!
 # Function to read large parquet file
 def scan_large_parquet(file):
@@ -53,15 +54,38 @@ if uploaded_file is not None:
 
     # Create df_L1_L2_L3 and df_total dataframes
     total_columns = ['Total current', 'Total active power', 'Total apparent power',
-                           'Total active energy', 'Total active returned energy']
+                     'Total active energy', 'Total active returned energy',
+                     'L1 total active energy', 'L1 total active returned energy',
+                     'L2 total active energy', 'L3 total active returned energy',
+                     'L3 total active energy', 'L3 total active returned energy_right']
     df_L1_L2_L3 = df_all.drop(total_columns)
+    df_L1_L2_L3 = df_L1_L2_L3.rename({'L1 current': 'l1_current', 'L1 voltage': 'l1_voltage',
+                                      'L1 active power': 'l1_active_power', 'L1 apparent power': 'l1_apparent_power',
+                                      'L1 Power factor': 'l1_power_factor', 'L1 frequency': 'l1_frequency',
+                                      'L2 current': 'l2_current', 'L2 voltage': 'l2_voltage',
+                                      'L2 active power': 'l2_active_power', 'L2 apparent power': 'l2_apparent_power',
+                                      'L2 Power factor': 'l2_power_factor', 'L2 frequency': 'l2_frequency',
+                                      'L3 current': 'l3_current', 'L3 voltage': 'l3_voltage',
+                                      'L3 active power': 'l3_active_power', 'L3 apparent power': 'l3_apparent_power',
+                                      'L3 Power factor': 'l3_power_factor', 'L3 frequency': 'l3_frequency'})
     data_columns = ['L1 current', 'L1 voltage', 'L1 active power', 'L1 apparent power', 'L1 Power factor',
-                        'L1 frequency', 'L1 total active energy', 'L1 total active returned energy',
-                        'L2 current', 'L2 voltage', 'L2 active power', 'L2 apparent power', 'L2 Power factor',
-                        'L2 frequency', 'L2 total active energy', 'L3 total active returned energy',
-                        'L3 current', 'L3 voltage', 'L3 active power', 'L3 apparent power', 'L3 Power factor',
-                        'L3 frequency', 'L3 total active energy', 'L3 total active returned energy_right']
+                    'L1 frequency',
+                    'L2 current', 'L2 voltage', 'L2 active power', 'L2 apparent power', 'L2 Power factor',
+                    'L2 frequency',
+                    'L3 current', 'L3 voltage', 'L3 active power', 'L3 apparent power', 'L3 Power factor',
+                    'L3 frequency']
     df_total = df_all.drop(data_columns)
+    df_total = df_total.rename({'L1 total active energy': 'l1_total_active_energy',
+                                'L1 total active returned energy': 'l1_total_active_returned_energy',
+                                'L2 total active energy': 'l2_total_active_energy',
+                                'L3 total active returned energy': 'l3_total_active_returned_energy',
+                                'L3 total active energy': 'l3_total_active_energy',
+                                'L3 total active returned energy_right': 'l3_total_active_returned_energy_right',
+                                'Total current': 'total_current',
+                                'Total active power': 'total_active_power',
+                                'Total apparent power': 'total_apparent_power',
+                                'Total active energy': 'total_active_energy',
+                                'Total active returned energy': 'total_active_returned_energy'})
 
     st.write('<h3>L1, L2, L3 values:</h3>', unsafe_allow_html=True)
     st.write(df_L1_L2_L3.head())
@@ -94,5 +118,3 @@ if uploaded_file is not None:
             st.write(analyzer.describe_dataframe())
         if action == 'SQL query':
             analyzer.query_with_sql()
-
-

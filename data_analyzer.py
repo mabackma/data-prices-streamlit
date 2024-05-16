@@ -31,4 +31,4 @@ class DataAnalyzer:
             result = self.dataframe.sql(query_string)
 
             st.write('<h3>Result of SQL query:</h3>', unsafe_allow_html=True)
-            st.write(result)
+            st.write(result.head())
