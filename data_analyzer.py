@@ -69,7 +69,8 @@ class DataAnalyzer:
 
             # Create the directory if it doesn't exist
             dirpath.mkdir(exist_ok=True)
-            result.write_parquet(path)
+            if not pathlib.Path(path).exists():
+                result.write_parquet(path)
 
             st.write('<h3>Result of SQL query:</h3>', unsafe_allow_html=True)
             st.write(result.head())
