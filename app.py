@@ -94,13 +94,16 @@ if uploaded_file is not None:
     chosen_dataframe = choose_dataframe()
 
     df = None
+    df_type = ''
     if chosen_dataframe == 'L1, L2, L3 values':
         df = df_L1_L2_L3
+        df_type = 'L'
     if chosen_dataframe == 'Total values':
         df = df_total
+        df_type = 'Total'
 
     if df is not None:
-        analyzer = DataAnalyzer(df)
+        analyzer = DataAnalyzer(df, df_type)
 
         action = show_options()
 
