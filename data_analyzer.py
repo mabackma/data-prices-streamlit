@@ -74,3 +74,4 @@ class DataAnalyzer:
 
             st.write('<h3>Result of SQL query:</h3>', unsafe_allow_html=True)
             st.write(result.head())
+            st.write(f"Number of rows: {result.height}")
