@@ -6,7 +6,7 @@ def callback_query():
     st.session_state.query_button_clicked = True
 
 
-# Replace any characters that are not alphanumeric, underscores, or hyphens
+# Replace any characters that are not allowed in a filename
 def sanitize_filename(filename):
     sanitized_filename = ''
     for letter in filename:
