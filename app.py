@@ -6,6 +6,10 @@ import streamlit as st
 def initialize_state():
     if "query_button_clicked" not in st.session_state:
         st.session_state.query_button_clicked = False
+    if "analyzer_L" not in st.session_state:
+        st.session_state.analyzer_L = None
+    if "analyzer_total" not in st.session_state:
+        st.session_state.analyzer_total = None
 
 
 def choose_dataframe():
@@ -28,9 +32,8 @@ def scan_large_parquet(file):
 
 
 st.set_page_config(layout="wide")
-initialize_state()
-
 st.write('<h3>Place your parquet file here</h3>', unsafe_allow_html=True)
+initialize_state()
 
 # File uploader for parquet file
 uploaded_file = st.file_uploader("Choose a file", type=["parquet"])
@@ -60,6 +63,11 @@ if uploaded_file is not None:
     df_total = df_all.drop(data_columns)
     df_total = df_total.rename({col: col.replace(' ', '_').lower() for col in df_total.columns})
 
+    if st.session_state.analyzer_L is None:
+        st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
+    if st.session_state.analyzer_total is None:
+        st.session_state.analyzer_total = DataAnalyzer(df_total, 'Total')
+
     st.write('<h3>L1, L2, L3 values:</h3>', unsafe_allow_html=True)
     st.write(df_L1_L2_L3.head())
     st.write('<h3>Total values:</h3>', unsafe_allow_html=True)
@@ -67,18 +75,13 @@ if uploaded_file is not None:
 
     chosen_dataframe = choose_dataframe()
 
-    df = None
-    df_type = ''
+    analyzer = None
     if chosen_dataframe == 'L1, L2, L3 values':
-        df = df_L1_L2_L3
-        df_type = 'L'
+        analyzer = st.session_state.analyzer_L
     if chosen_dataframe == 'Total values':
-        df = df_total
-        df_type = 'Total'
+        analyzer = st.session_state.analyzer_total
 
-    if df is not None:
-        analyzer = DataAnalyzer(df, df_type)
-
+    if analyzer is not None:
         action = show_options()
 
         if action != 'SQL query':
