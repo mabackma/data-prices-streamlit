@@ -24,11 +24,11 @@ def switch(symbol):
     if symbol == ";":
         return ""
     if symbol == "\"":
-        return "DOUBLE_QUOTE"
+        return "D_QUOTE"
     if symbol == "/":
-        return "FORWARD_SLASH"
+        return "F_SLASH"
     if symbol == "\\":
-        return "BACK_SLASH"
+        return "B_SLASH"
     if symbol == "|":
         return "OR"
     if symbol == "?":
