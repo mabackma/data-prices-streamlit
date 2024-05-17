@@ -32,47 +32,48 @@ def scan_large_parquet(file):
 
 
 st.set_page_config(layout="wide")
-st.write('<h3>Place your parquet file here</h3>', unsafe_allow_html=True)
 initialize_state()
 
-# File uploader for parquet file
-uploaded_file = st.file_uploader("Choose a file", type=["parquet"])
+if st.session_state.analyzer_L is None and st.session_state.analyzer_total is None:
+    # File uploader for parquet file
+    st.write('<h3>Place your parquet file here</h3>', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Choose a file", type=["parquet"])
 
-if uploaded_file is not None:
-    # Display file details
-    st.write("Filename:", uploaded_file.name)
-    st.write("File size:", uploaded_file.size, "bytes")
+    if uploaded_file is not None:
+        # Display file details
+        st.write("Filename:", uploaded_file.name)
+        st.write("File size:", uploaded_file.size, "bytes")
 
-    # Read and process the file
-    with st.spinner('Reading the file...'):
-        df_all = scan_large_parquet(uploaded_file)
+        # Read and process the file
+        with st.spinner('Reading the file...'):
+            df_all = scan_large_parquet(uploaded_file)
 
-    st.success('File successfully read!')
+        st.success('File successfully read!')
 
-    total_columns = []
-    data_columns = []
-    for col in df_all.columns:
-        if 'total' in col or 'Total' in col:
-            total_columns.append(col)
-        elif 'ts' not in col and 'meter_id' not in col and 'price' not in col:
-            data_columns.append(col)
+        total_columns = []
+        data_columns = []
+        for col in df_all.columns:
+            if 'total' in col or 'Total' in col:
+                total_columns.append(col)
+            elif 'ts' not in col and 'meter_id' not in col and 'price' not in col:
+                data_columns.append(col)
 
-    # Create df_L1_L2_L3 and df_total dataframes
-    df_L1_L2_L3 = df_all.drop(total_columns)
-    df_L1_L2_L3 = df_L1_L2_L3.rename({col: col.replace(' ', '_').lower() for col in df_L1_L2_L3.columns})
-    df_total = df_all.drop(data_columns)
-    df_total = df_total.rename({col: col.replace(' ', '_').lower() for col in df_total.columns})
+        # Create df_L1_L2_L3 and df_total dataframes
+        df_L1_L2_L3 = df_all.drop(total_columns)
+        df_L1_L2_L3 = df_L1_L2_L3.rename({col: col.replace(' ', '_').lower() for col in df_L1_L2_L3.columns})
+        df_total = df_all.drop(data_columns)
+        df_total = df_total.rename({col: col.replace(' ', '_').lower() for col in df_total.columns})
 
-    if st.session_state.analyzer_L is None:
         st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
-    if st.session_state.analyzer_total is None:
         st.session_state.analyzer_total = DataAnalyzer(df_total, 'Total')
 
-    st.write('<h3>L1, L2, L3 values:</h3>', unsafe_allow_html=True)
-    st.write(df_L1_L2_L3.head())
-    st.write('<h3>Total values:</h3>', unsafe_allow_html=True)
-    st.write(df_total.head())
+        st.write('<h3>L1, L2, L3 values:</h3>', unsafe_allow_html=True)
+        st.write(df_L1_L2_L3.head())
+        st.write('<h3>Total values:</h3>', unsafe_allow_html=True)
+        st.write(df_total.head())
 
+        chosen_dataframe = choose_dataframe()
+else:
     chosen_dataframe = choose_dataframe()
 
     analyzer = None
