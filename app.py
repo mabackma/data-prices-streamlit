@@ -1,9 +1,4 @@
-from entsoe import EntsoePandasClient
-import pandas as pd
 import polars as pl
-import os
-from dotenv import load_dotenv
-import matplotlib.pyplot as plt
 from data_analyzer import DataAnalyzer
 import streamlit as st
 
@@ -56,7 +51,7 @@ if uploaded_file is not None:
     for col in df_all.columns:
         if 'total' in col or 'Total' in col:
             total_columns.append(col)
-        else:
+        elif 'ts' not in col and 'meter_id' not in col and 'price' not in col:
             data_columns.append(col)
 
     # Create df_L1_L2_L3 and df_total dataframes
