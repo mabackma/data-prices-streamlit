@@ -6,10 +6,14 @@ import streamlit as st
 def initialize_state():
     if "query_button_clicked" not in st.session_state:
         st.session_state.query_button_clicked = False
+    if "line_button_clicked" not in st.session_state:
+        st.session_state.line_button_clicked = False
     if "analyzer_L" not in st.session_state:
         st.session_state.analyzer_L = None
     if "analyzer_total" not in st.session_state:
         st.session_state.analyzer_total = None
+    if "locations" not in st.session_state:
+        st.session_state.locations = []
 
 
 def choose_dataframe():
@@ -19,9 +23,14 @@ def choose_dataframe():
 
 
 def show_options():
-    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query']
+    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart']
     selected_option = st.radio('Select Action', list(options))
     return selected_option
+
+
+def choose_location(dataframe):
+    selected_location = st.radio('Select Location', st.session_state.locations)
+    return selected_location
 
 
 # Function to read large parquet file
@@ -72,6 +81,7 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
         st.write('<h3>Total values:</h3>', unsafe_allow_html=True)
         st.write(df_total.head())
 
+        st.session_state.locations = df_all.select(pl.col('meter_id')).unique()['meter_id'].to_list()
         chosen_dataframe = choose_dataframe()
 else:
     chosen_dataframe = choose_dataframe()
@@ -98,3 +108,8 @@ else:
             st.write(analyzer.describe_dataframe())
         if action == 'SQL query':
             analyzer.query_with_sql()
+        if action == 'Line chart':
+            location = choose_location(analyzer.dataframe)
+            if location is not None:
+                st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
+                analyzer.line_chart(location)

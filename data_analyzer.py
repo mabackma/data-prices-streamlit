@@ -6,6 +6,10 @@ def callback_query():
     st.session_state.query_button_clicked = True
 
 
+def callback_lines():
+    st.session_state.line_button_clicked = True
+
+
 # Replace any characters that are not allowed in a filename
 def sanitize_filename(filename):
     sanitized_filename = ''
@@ -47,14 +51,11 @@ class DataAnalyzer:
         for column in self.dataframe.columns:
             st.write(column)
 
-
     def show_sample(self):
         return self.dataframe.sample(5)
 
-
     def describe_dataframe(self):
         return self.dataframe.describe()
-
 
     def query_with_sql(self):
         query_string = st.text_input('Enter the SQL query:')
@@ -75,3 +76,14 @@ class DataAnalyzer:
             st.write('<h3>Result of SQL query:</h3>', unsafe_allow_html=True)
             st.write(result.head())
             st.write(f"Number of rows: {result.height}")
+
+
+    def line_chart(self, location):
+        query_string = f"SELECT * FROM self WHERE meter_id = '{location}'"
+        location_df = self.dataframe.sql(query_string)
+
+        lines = []
+        for column in location_df.columns:
+            if column != 'ts' and column != 'meter_id':
+                if st.checkbox(column):
+                    lines.append(column)
