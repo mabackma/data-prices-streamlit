@@ -97,6 +97,8 @@ else:
 
         if action != 'SQL query':
             st.session_state.query_button_clicked = False
+        if action != 'Line chart':
+            st.session_state.line_chart_button_clicked = False
         if action == 'List columns':
             st.write('<h3>Columns in the DataFrame:</h3>', unsafe_allow_html=True)
             analyzer.list_columns()
@@ -111,5 +113,4 @@ else:
         if action == 'Line chart':
             location = choose_location(analyzer.dataframe)
             if location is not None:
-                st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
                 analyzer.line_chart(location)

@@ -1,2 +1,4 @@
 polars
+pandas
 streamlit
+scikit-learn
