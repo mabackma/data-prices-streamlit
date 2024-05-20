@@ -3,7 +3,10 @@ import polars as pl
 import pandas as pd
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
-
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.graph_objects as go
+import plotly.express as px
 
 def callback_query():
     st.session_state.query_button_clicked = True
@@ -11,6 +14,10 @@ def callback_query():
 
 def callback_lines():
     st.session_state.line_chart_button_clicked = True
+
+
+def callback_heatmap():
+    st.session_state.heatmap_button_clicked = True
 
 
 # Replace any characters that are not allowed in a filename
@@ -91,7 +98,7 @@ class DataAnalyzer:
             st.write(result.head())
             st.write(f"Number of rows: {result.height}")
 
-    def line_chart(self, location, start, end):
+    def prepare_dataframe(self, location, start, end):
         query_string = f"SELECT * FROM self WHERE meter_id = '{location}'"
         location_df = self.dataframe.sql(query_string)
         location_df = location_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end))
@@ -106,6 +113,10 @@ class DataAnalyzer:
         location_df = location_df.to_pandas()
         location_df['ts'] = pd.to_datetime(location_df['ts'])
         location_df.set_index('ts', inplace=True, drop=False)
+        return lines, location_df
+
+    def line_chart(self, location, start, end):
+        lines, location_df = self.prepare_dataframe(location, start, end)
 
         if not st.session_state.line_chart_button_clicked:
             st.button('Click here to draw line charts', on_click=callback_lines)
@@ -127,5 +138,42 @@ class DataAnalyzer:
                     st.line_chart(hourly_df[lines])
                 else:
                     st.write('Choose columns to draw line chart')
+            else:
+                st.write('Choose another time range')
+
+    def draw_heatmap(self, data, location, line):
+        # Convert index to string for proper display in Plotly
+        data.index = data.index.astype(str)
+
+        # Create Plotly heatmap
+        fig = px.imshow(data.T, labels=dict(x="Date", y="Hour of Day", color="Value"))
+        fig.update_layout(title=f'{line}', xaxis_title='Date',
+                          yaxis_title='Hour of Day')
+
+        # Display the Plotly heatmap in Streamlit
+        st.plotly_chart(fig, theme="streamlit")
+
+
+    def draw_heatmaps(self, location, start, end):
+        lines, location_df = self.prepare_dataframe(location, start, end)
+
+        if not st.session_state.heatmap_button_clicked:
+            st.button('Click here to draw heatmap', on_click=callback_heatmap)
+        if st.session_state.heatmap_button_clicked:
+            if len(location_df) > 0:
+                if len(lines) > 0:
+                    location_df[lines] = location_df[lines].fillna(0)
+
+                    # Prepare data for heatmap
+                    location_df['hour'] = location_df.index.hour
+                    location_df['day'] = location_df.index.date
+
+                    st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
+                    for line in lines:
+                        heatmap_data = location_df.pivot_table(index='day', columns='hour', values=line, aggfunc='mean')
+                        self.draw_heatmap(heatmap_data, location, line)
+                else:
+                    st.write('Choose columns to draw heatmap')
             else:
                 st.write('Choose another time range')

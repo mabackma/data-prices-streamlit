@@ -26,7 +26,7 @@ def choose_dataframe():
 
 
 def show_options():
-    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart']
+    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap']
     selected_option = st.radio('Select Action', list(options))
     return selected_option
 
@@ -182,3 +182,8 @@ else:
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.line_chart(location, start_time, end_time)
+        if action == 'Heatmap':
+            location = choose_location(analyzer.dataframe)
+            start_time, end_time = choose_time_interval()
+            if location is not None:
+                analyzer.draw_heatmaps(location, start_time, end_time)
