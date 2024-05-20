@@ -86,9 +86,6 @@ class DataAnalyzer:
         location_df = self.dataframe.sql(query_string)
         location_df = location_df.filter((pl.col('ts') >= start) & (pl.col('ts') <= end))
 
-        st.write("Start date:", start)
-        st.write("End date:", end)
-
         lines = []
         for column in location_df.columns:
             if column != 'ts' and column != 'meter_id':

@@ -90,6 +90,8 @@ def choose_time_interval():
         month = st.number_input('Select month', value=1, min_value=1, max_value=12)
         start, end = get_dates_for_month(year, month)
 
+    st.write("Start date:", start)
+    st.write("End date:", end)
     return start, end
 
 
