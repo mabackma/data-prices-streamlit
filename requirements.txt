@@ -1,7 +1,5 @@
 polars
 pandas
-seaborn
-matplotlib
 plotly
 streamlit
 scikit-learn
