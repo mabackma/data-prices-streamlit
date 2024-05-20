@@ -45,6 +45,16 @@ def switch(symbol):
     return symbol
 
 
+def get_hourly_values(df):
+    # Select only numeric columns
+    numeric_cols = df.select_dtypes(include='number').columns
+    numeric_df = df[numeric_cols]
+
+    # Resample the data to hourly frequency and compute the mean for each hour
+    hourly_df = numeric_df.resample('h').mean()
+    return hourly_df
+
+
 class DataAnalyzer:
     def __init__(self, dataframe, dataframe_type):
         self.dataframe = dataframe
@@ -108,11 +118,13 @@ class DataAnalyzer:
                     location_df[lines] = location_df[lines].fillna(0)
                     location_df[lines] = scaler.fit_transform(location_df[lines])
 
+                    # Get hourly values
+                    hourly_df = get_hourly_values(location_df)
+
                     # Draw the line chart
                     st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
-                    st.write(location_df.head())
-                    st.line_chart(location_df[lines])
+                    st.line_chart(hourly_df[lines])
                 else:
                     st.write('Choose columns to draw line chart')
             else:

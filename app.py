@@ -81,12 +81,12 @@ def choose_time_interval():
         start = st.date_input("Select day", datetime.now())
         end = start + timedelta(days=1)
     if time_interval == 'week':
-        year = st.radio('Select year', year_choices)
+        year = st.radio('Select year', year_choices, index=1)
         year = int(year)
         week_number = st.number_input('Select week number', value=1, min_value=1, max_value=52)
         start, end = get_dates_for_week(year, week_number)
     if time_interval == 'month':
-        year = st.radio('Select year', year_choices)
+        year = st.radio('Select year', year_choices, index=1)
         year = int(year)
         month = st.number_input('Select month', value=1, min_value=1, max_value=12)
         start, end = get_dates_for_month(year, month)
