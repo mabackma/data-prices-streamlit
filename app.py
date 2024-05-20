@@ -29,7 +29,7 @@ def show_options():
 
 
 def choose_location(dataframe):
-    selected_location = st.radio('Select Location', st.session_state.locations)
+    selected_location = st.selectbox('Select Location', st.session_state.locations)
     return selected_location
 
 

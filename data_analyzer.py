@@ -4,6 +4,8 @@ import polars as pl
 import pandas as pd
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
+from datetime import datetime, timedelta
+
 
 def callback_query():
     st.session_state.query_button_clicked = True
@@ -45,6 +47,40 @@ def switch(symbol):
     return symbol
 
 
+def get_dates_for_week(year, week_number):
+    # Get the first day of the year
+    first_day = datetime(year, 1, 1)
+
+    # Calculate the start of the first week
+    start_of_first_week = first_day - timedelta(days=first_day.isocalendar()[2] - 1)
+
+    # Calculate the start date of the selected week
+    start_date = start_of_first_week + timedelta(weeks=week_number - 1)
+
+    # Calculate the end date of the selected week
+    end_date = start_date + timedelta(days=7)
+
+    return start_date, end_date
+
+
+def get_dates_for_month(year, month_number):
+    # Calculate the start date of the month
+    start_date = datetime(year, month_number, 1)
+
+    # Calculate the end date of the month
+    if month_number == 2:
+        if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
+            end_date = datetime(year, month_number, 29)  # Leap year
+        else:
+            end_date = datetime(year, month_number, 28)  # Non-leap year
+    elif month_number in [4, 6, 9, 11]:
+        end_date = datetime(year, month_number, 30)
+    else:
+        end_date = datetime(year, month_number, 31)
+
+    return start_date, end_date
+
+
 class DataAnalyzer:
     def __init__(self, dataframe, dataframe_type):
         self.dataframe = dataframe
@@ -81,15 +117,34 @@ class DataAnalyzer:
             st.write(result.head())
             st.write(f"Number of rows: {result.height}")
 
-
     def line_chart(self, location):
         query_string = f"SELECT * FROM self WHERE meter_id = '{location}'"
         location_df = self.dataframe.sql(query_string)
 
-        start = st.date_input("Select start date", datetime.now())
+        year_choices = ['2023', '2024']
+        time_intervals = ['day', 'week', 'month']
+
+        time_interval = st.radio('Select time interval', time_intervals)
+
+        start = None
+        end = None
+        if time_interval == 'day':
+            start = st.date_input("Select day", datetime.now())
+            end = start
+        if time_interval == 'week':
+            year = st.radio('Select year', year_choices)
+            year = int(year)
+            week_number = st.number_input('Select week number', value=1, min_value=1, max_value=52)
+            start, end = get_dates_for_week(year, week_number)
+        if time_interval == 'month':
+            year = st.radio('Select year', year_choices)
+            year = int(year)
+            month = st.number_input('Select month', value=1, min_value=1, max_value=12)
+            start, end = get_dates_for_month(year, month)
+
         st.write("Start date:", start)
-        end = st.date_input("Select end date", datetime.now())
         st.write("End date:", end)
+
         location_df = location_df.filter((pl.col('ts') >= start) & (pl.col('ts') <= end))
 
         lines = []
@@ -118,4 +173,3 @@ class DataAnalyzer:
 
             # Draw the line chart
             st.line_chart(location_df[lines])
-
