@@ -84,7 +84,7 @@ class DataAnalyzer:
     def line_chart(self, location, start, end):
         query_string = f"SELECT * FROM self WHERE meter_id = '{location}'"
         location_df = self.dataframe.sql(query_string)
-        location_df = location_df.filter((pl.col('ts') >= start) & (pl.col('ts') <= end))
+        location_df = location_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end))
 
         lines = []
         for column in location_df.columns:
@@ -111,6 +111,7 @@ class DataAnalyzer:
                     # Draw the line chart
                     st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
+                    st.write(location_df.head())
                     st.line_chart(location_df[lines])
                 else:
                     st.write('Choose columns to draw line chart')

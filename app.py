@@ -65,6 +65,7 @@ def get_dates_for_month(year, month_number):
     else:
         end_date = datetime(year, month_number, 31)
 
+    end_date = end_date + timedelta(days=1)
     return start_date, end_date
 
 
@@ -78,7 +79,7 @@ def choose_time_interval():
     end = None
     if time_interval == 'day':
         start = st.date_input("Select day", datetime.now())
-        end = start
+        end = start + timedelta(days=1)
     if time_interval == 'week':
         year = st.radio('Select year', year_choices)
         year = int(year)
