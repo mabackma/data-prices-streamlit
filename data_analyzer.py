@@ -98,21 +98,24 @@ class DataAnalyzer:
         # Convert to pandas before drawing line chart
         location_df = location_df.to_pandas()
         location_df['ts'] = pd.to_datetime(location_df['ts'])
-        location_df.set_index('ts', inplace=True)
+        location_df.set_index('ts', inplace=True, drop=False)
 
         if not st.session_state.line_button_clicked:
             st.button('Click here to draw line charts', on_click=callback_lines)
         if st.session_state.line_button_clicked:
-            st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
-            st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
-
-            # Normalize selected columns
-            scaler = MinMaxScaler()
             if len(location_df) > 0:
-                # Fill None values with 0
-                location_df[lines] = location_df[lines].fillna(0)
-                location_df[lines] = scaler.fit_transform(location_df[lines])
+                # Normalize selected columns
+                scaler = MinMaxScaler()
+                if len(lines) > 0:
+                    # Fill None values with 0
+                    location_df[lines] = location_df[lines].fillna(0)
+                    location_df[lines] = scaler.fit_transform(location_df[lines])
 
-            # Draw the line chart
-            st.line_chart(location_df[lines])
-            st.session_state.line_button_clicked = False
+                    # Draw the line chart
+                    st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
+                    st.line_chart(location_df[lines])
+                else:
+                    st.write('Choose columns to draw line chart')
+            else:
+                st.write('Choose another time range')
