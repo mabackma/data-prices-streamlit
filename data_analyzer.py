@@ -5,6 +5,7 @@ import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
 
+
 def callback_query():
     st.session_state.query_button_clicked = True
 
@@ -57,6 +58,19 @@ def get_hourly_values(df):
     # Resample the data to hourly frequency and compute the mean for each hour
     hourly_df = numeric_df.resample('h').mean()
     return hourly_df
+
+
+def draw_heatmap(data, line):
+    # Convert index to string for proper display in Plotly
+    data.index = data.index.astype(str)
+
+    # Create Plotly heatmap
+    fig = px.imshow(data.T, labels=dict(x="Date", y="Hour of Day", color="Value"))
+    fig.update_layout(title=f'{line}', xaxis_title='Date',
+                      yaxis_title='Hour of Day')
+
+    # Display the Plotly heatmap in Streamlit
+    st.plotly_chart(fig, theme="streamlit")
 
 
 class DataAnalyzer:
@@ -138,19 +152,6 @@ class DataAnalyzer:
             else:
                 st.write('Choose another time range')
 
-    def draw_heatmap(self, data, location, line):
-        # Convert index to string for proper display in Plotly
-        data.index = data.index.astype(str)
-
-        # Create Plotly heatmap
-        fig = px.imshow(data.T, labels=dict(x="Date", y="Hour of Day", color="Value"))
-        fig.update_layout(title=f'{line}', xaxis_title='Date',
-                          yaxis_title='Hour of Day')
-
-        # Display the Plotly heatmap in Streamlit
-        st.plotly_chart(fig, theme="streamlit")
-
-
     def draw_heatmaps(self, location, start, end):
         lines, location_df = self.prepare_dataframe(location, start, end)
 
@@ -169,7 +170,7 @@ class DataAnalyzer:
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
                     for line in lines:
                         heatmap_data = location_df.pivot_table(index='day', columns='hour', values=line, aggfunc='mean')
-                        self.draw_heatmap(heatmap_data, location, line)
+                        draw_heatmap(heatmap_data, line)
                 else:
                     st.write('Choose columns to draw heatmap')
             else:
