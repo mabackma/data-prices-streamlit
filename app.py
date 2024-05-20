@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import polars as pl
 from data_analyzer import DataAnalyzer
 import streamlit as st
@@ -31,6 +32,65 @@ def show_options():
 def choose_location(dataframe):
     selected_location = st.selectbox('Select Location', st.session_state.locations)
     return selected_location
+
+
+def get_dates_for_week(year, week_number):
+    # Get the first day of the year
+    first_day = datetime(year, 1, 1)
+
+    # Calculate the start of the first week
+    start_of_first_week = first_day - timedelta(days=first_day.isocalendar()[2] - 1)
+
+    # Calculate the start date of the selected week
+    start_date = start_of_first_week + timedelta(weeks=week_number - 1)
+
+    # Calculate the end date of the selected week
+    end_date = start_date + timedelta(days=7)
+
+    return start_date, end_date
+
+
+def get_dates_for_month(year, month_number):
+    # Calculate the start date of the month
+    start_date = datetime(year, month_number, 1)
+
+    # Calculate the end date of the month
+    if month_number == 2:
+        if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
+            end_date = datetime(year, month_number, 29)  # Leap year
+        else:
+            end_date = datetime(year, month_number, 28)  # Non-leap year
+    elif month_number in [4, 6, 9, 11]:
+        end_date = datetime(year, month_number, 30)
+    else:
+        end_date = datetime(year, month_number, 31)
+
+    return start_date, end_date
+
+
+def choose_time_interval():
+    year_choices = ['2023', '2024']
+    time_intervals = ['day', 'week', 'month']
+
+    time_interval = st.radio('Select time interval', time_intervals)
+
+    start = None
+    end = None
+    if time_interval == 'day':
+        start = st.date_input("Select day", datetime.now())
+        end = start
+    if time_interval == 'week':
+        year = st.radio('Select year', year_choices)
+        year = int(year)
+        week_number = st.number_input('Select week number', value=1, min_value=1, max_value=52)
+        start, end = get_dates_for_week(year, week_number)
+    if time_interval == 'month':
+        year = st.radio('Select year', year_choices)
+        year = int(year)
+        month = st.number_input('Select month', value=1, min_value=1, max_value=12)
+        start, end = get_dates_for_month(year, month)
+
+    return start, end
 
 
 # Function to read large parquet file
@@ -112,5 +172,6 @@ else:
             analyzer.query_with_sql()
         if action == 'Line chart':
             location = choose_location(analyzer.dataframe)
+            start_time, end_time = choose_time_interval()
             if location is not None:
-                analyzer.line_chart(location)
+                analyzer.line_chart(location, start_time, end_time)
