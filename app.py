@@ -7,8 +7,10 @@ import streamlit as st
 def initialize_state():
     if "query_button_clicked" not in st.session_state:
         st.session_state.query_button_clicked = False
-    if "line_button_clicked" not in st.session_state:
-        st.session_state.line_button_clicked = False
+    if "line_chart_button_clicked" not in st.session_state:
+        st.session_state.line_chart_button_clicked = False
+    if "heatmap_button_clicked" not in st.session_state:
+        st.session_state.heatmap_button_clicked = False
     if "analyzer_L" not in st.session_state:
         st.session_state.analyzer_L = None
     if "analyzer_total" not in st.session_state:
@@ -162,6 +164,8 @@ else:
             st.session_state.query_button_clicked = False
         if action != 'Line chart':
             st.session_state.line_chart_button_clicked = False
+        if action != 'Heatmap':
+            st.session_state.heatmap_button_clicked = False
         if action == 'List columns':
             st.write('<h3>Columns in the DataFrame:</h3>', unsafe_allow_html=True)
             analyzer.list_columns()

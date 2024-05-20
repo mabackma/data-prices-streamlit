@@ -10,7 +10,7 @@ def callback_query():
 
 
 def callback_lines():
-    st.session_state.line_button_clicked = True
+    st.session_state.line_chart_button_clicked = True
 
 
 # Replace any characters that are not allowed in a filename
@@ -107,9 +107,9 @@ class DataAnalyzer:
         location_df['ts'] = pd.to_datetime(location_df['ts'])
         location_df.set_index('ts', inplace=True, drop=False)
 
-        if not st.session_state.line_button_clicked:
+        if not st.session_state.line_chart_button_clicked:
             st.button('Click here to draw line charts', on_click=callback_lines)
-        if st.session_state.line_button_clicked:
+        if st.session_state.line_chart_button_clicked:
             if len(location_df) > 0:
                 # Normalize selected columns
                 scaler = MinMaxScaler()
