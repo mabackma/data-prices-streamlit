@@ -60,13 +60,13 @@ def get_hourly_values(df):
     return hourly_df
 
 
-def draw_heatmap(data, line):
+def draw_heatmap(data, sensor):
     # Convert index to string for proper display in Plotly
     data.index = data.index.astype(str)
 
     # Create Plotly heatmap
     fig = px.imshow(data.T, labels=dict(x="Date", y="Hour of Day", color="Value"))
-    fig.update_layout(title=f'{line}', xaxis_title='Date',
+    fig.update_layout(title=f'{sensor}', xaxis_title='Date',
                       yaxis_title='Hour of Day')
 
     # Display the Plotly heatmap in Streamlit
@@ -116,18 +116,18 @@ class DataAnalyzer:
 
         number_of_columns = 2 if len(location_df.columns) < 15 else 6
         cols = st.columns(number_of_columns)
-        lines = []
-        for i, column in enumerate(location_df.columns, start=-2):
+        sensors = []
+        for i, sensor in enumerate(location_df.columns, start=-2):
             with cols[i % number_of_columns]:
-                if column != 'ts' and column != 'meter_id':
-                    if st.checkbox(column):
-                        lines.append(column)
+                if sensor != 'ts' and sensor != 'meter_id':
+                    if st.checkbox(sensor):
+                        sensors.append(sensor)
 
-        # Convert to pandas before drawing line chart
+        # Convert to pandas before drawing line chart or heatmap
         location_df = location_df.to_pandas()
         location_df['ts'] = pd.to_datetime(location_df['ts'])
         location_df.set_index('ts', inplace=True, drop=False)
-        return lines, location_df
+        return sensors, location_df
 
     def line_chart(self, location, start, end):
         lines, location_df = self.prepare_dataframe(location, start, end)
@@ -156,14 +156,14 @@ class DataAnalyzer:
                 st.write('Choose another time range')
 
     def draw_heatmaps(self, location, start, end):
-        lines, location_df = self.prepare_dataframe(location, start, end)
+        sensors, location_df = self.prepare_dataframe(location, start, end)
 
         if not st.session_state.heatmap_button_clicked:
             st.button('Click here to draw heatmap', on_click=callback_heatmap)
         if st.session_state.heatmap_button_clicked:
             if len(location_df) > 0:
-                if len(lines) > 0:
-                    location_df[lines] = location_df[lines].fillna(0)
+                if len(sensors) > 0:
+                    #location_df[sensors] = location_df[sensors].fillna(0)
 
                     # Prepare data for heatmap
                     location_df['hour'] = location_df.index.hour
@@ -173,11 +173,11 @@ class DataAnalyzer:
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
 
                     # Draw heatmaps in columns
-                    columns = st.columns(len(lines))
-                    for i, line in enumerate(lines, start=0):
-                        heatmap_data = location_df.pivot_table(index='day', columns='hour', values=line, aggfunc='mean')
+                    columns = st.columns(len(sensors))
+                    for i, sensor in enumerate(sensors, start=0):
+                        heatmap_data = location_df.pivot_table(index='day', columns='hour', values=sensor, aggfunc='mean')
                         with columns[i]:
-                            draw_heatmap(heatmap_data, line)
+                            draw_heatmap(heatmap_data, sensor)
                 else:
                     st.write('Choose columns to draw heatmap')
             else:
