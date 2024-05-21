@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import polars as pl
 from data_analyzer import DataAnalyzer
 import streamlit as st
+from location_names import location_names
 
 
 def initialize_state():
@@ -31,8 +32,13 @@ def show_options():
     return selected_option
 
 
-def choose_location(dataframe):
-    selected_location = st.selectbox('Select Location', st.session_state.locations)
+def choose_location():
+    location_display_names = [location_names[key] for key in st.session_state.locations]
+    selected_display_name = st.selectbox('Select Location', location_display_names)
+
+    # Create a dictionary to map display names back to keys
+    display_name_to_key = {v: k for k, v in location_names.items()}
+    selected_location = display_name_to_key[selected_display_name]
     return selected_location
 
 
@@ -183,12 +189,12 @@ else:
         if action == 'SQL query':
             analyzer.query_with_sql()
         if action == 'Line chart':
-            location = choose_location(analyzer.dataframe)
+            location = choose_location()
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.line_chart(location, start_time, end_time)
         if action == 'Heatmap':
-            location = choose_location(analyzer.dataframe)
+            location = choose_location()
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.draw_heatmaps(location, start_time, end_time)

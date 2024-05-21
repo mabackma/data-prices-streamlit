@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
+from location_names import location_names
 
 
 def callback_query():
@@ -147,7 +148,8 @@ class DataAnalyzer:
                     hourly_df = get_hourly_values(location_df)
 
                     # Draw the line chart
-                    st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
+                    st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
                 else:
@@ -169,7 +171,8 @@ class DataAnalyzer:
                     location_df['hour'] = location_df.index.hour
                     location_df['day'] = location_df.index.date
 
-                    st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
+                    st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
 
                     # Draw heatmaps in columns
