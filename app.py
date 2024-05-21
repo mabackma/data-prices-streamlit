@@ -110,7 +110,7 @@ def choose_time_interval():
 
 
 # Function to read large parquet file
-#@st.cache_data
+@st.cache_data
 def scan_large_parquet(file):
     df_scan = pl.read_parquet(file)
     return df_scan
