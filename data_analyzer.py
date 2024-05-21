@@ -114,11 +114,14 @@ class DataAnalyzer:
         location_df = self.dataframe.sql(query_string)
         location_df = location_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end))
 
+        number_of_columns = 2 if len(location_df.columns) < 15 else 6
+        cols = st.columns(number_of_columns)
         lines = []
-        for column in location_df.columns:
-            if column != 'ts' and column != 'meter_id':
-                if st.checkbox(column):
-                    lines.append(column)
+        for i, column in enumerate(location_df.columns, start=-2):
+            with cols[i % number_of_columns]:
+                if column != 'ts' and column != 'meter_id':
+                    if st.checkbox(column):
+                        lines.append(column)
 
         # Convert to pandas before drawing line chart
         location_df = location_df.to_pandas()
