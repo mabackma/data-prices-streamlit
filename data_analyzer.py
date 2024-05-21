@@ -150,7 +150,7 @@ class DataAnalyzer:
                     # Draw the line chart
                     st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
                     st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
-                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
+                    st.write(f'<h4>Time range: {start.date()} - {end.date()}</h4>', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
                 else:
                     st.write('Choose columns to draw line chart')
@@ -173,7 +173,7 @@ class DataAnalyzer:
 
                     st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
                     st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
-                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
+                    st.write(f'<h4>Time range: {start.date()} - {end.date()}</h4>', unsafe_allow_html=True)
 
                     # Draw heatmaps in columns
                     columns = st.columns(len(sensors))
