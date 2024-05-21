@@ -172,14 +172,12 @@ class DataAnalyzer:
                     st.write(f'<h3>Location: {location}</h3>', unsafe_allow_html=True)
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
 
-
                     # Draw heatmaps in columns
                     columns = st.columns(len(lines))
                     for i, line in enumerate(lines, start=0):
                         heatmap_data = location_df.pivot_table(index='day', columns='hour', values=line, aggfunc='mean')
                         with columns[i]:
                             draw_heatmap(heatmap_data, line)
-
                 else:
                     st.write('Choose columns to draw heatmap')
             else:
