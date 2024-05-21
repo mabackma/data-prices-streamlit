@@ -75,23 +75,28 @@ def choose_time_interval():
     year_choices = ['2023', '2024']
     time_intervals = ['day', 'week', 'month']
 
-    time_interval = st.radio('Select time interval', time_intervals)
+    columns = st.columns(3)
+    with columns[0]:
+        time_interval = st.radio('Select time interval', time_intervals)
 
     start = None
     end = None
-    if time_interval == 'day':
-        start = st.date_input("Select day", datetime.now())
-        end = start + timedelta(days=1)
-    if time_interval == 'week':
-        year = st.radio('Select year', year_choices, index=1)
-        year = int(year)
-        week_number = st.number_input('Select week number', value=1, min_value=1, max_value=52)
-        start, end = get_dates_for_week(year, week_number)
-    if time_interval == 'month':
-        year = st.radio('Select year', year_choices, index=1)
-        year = int(year)
-        month = st.number_input('Select month', value=1, min_value=1, max_value=12)
-        start, end = get_dates_for_month(year, month)
+    with columns[1]:
+        if time_interval == 'day':
+            start = st.date_input("Select day", datetime.now())
+            end = start + timedelta(days=1)
+        if time_interval == 'week':
+            year = st.radio('Select year', year_choices, index=1)
+            year = int(year)
+            with columns[2]:
+                week_number = st.number_input('Select week number', value=1, min_value=1, max_value=52)
+                start, end = get_dates_for_week(year, week_number)
+        if time_interval == 'month':
+            year = st.radio('Select year', year_choices, index=1)
+            year = int(year)
+            with columns[2]:
+                month = st.number_input('Select month', value=1, min_value=1, max_value=12)
+                start, end = get_dates_for_month(year, month)
 
     st.write("Start date:", start)
     st.write("End date:", end)
