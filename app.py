@@ -55,7 +55,7 @@ def get_dates_for_week(year, week_number):
     # Calculate the end date of the selected week
     end_date = start_date + timedelta(days=7)
 
-    return start_date, end_date
+    return start_date.date(), end_date.date()
 
 
 def get_dates_for_month(year, month_number):
@@ -74,7 +74,7 @@ def get_dates_for_month(year, month_number):
         end_date = datetime(year, month_number, 31)
 
     end_date = end_date + timedelta(days=1)
-    return start_date, end_date
+    return start_date.date(), end_date.date()
 
 
 def choose_time_interval():
