@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
-from location_names import location_names
+from dictionaries import location_names, units
 
 
 def callback_query():
@@ -66,9 +66,14 @@ def draw_heatmap(data, sensor):
     data.index = data.index.astype(str)
 
     # Create Plotly heatmap
-    fig = px.imshow(data.T, labels=dict(x="Date", y="Hour of Day", color="Value"))
-    fig.update_layout(title=f'{sensor}', xaxis_title='Date',
-                      yaxis_title='Hour of Day')
+    fig = px.imshow(data.T, labels=dict(x="Date", y="Hour of Day", color=f"{units[sensor]}"))
+    fig.update_layout(
+        title=f'{sensor}',
+        xaxis_title='Date',
+        yaxis_title='Hour of Day',
+        width=400,
+        height=500
+    )
 
     # Display the Plotly heatmap in Streamlit
     st.plotly_chart(fig, theme="streamlit")
@@ -176,10 +181,10 @@ class DataAnalyzer:
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
 
                     # Draw heatmaps in columns
-                    columns = st.columns(len(sensors))
+                    columns = st.columns(4)
                     for i, sensor in enumerate(sensors, start=0):
                         heatmap_data = location_df.pivot_table(index='day', columns='hour', values=sensor, aggfunc='mean')
-                        with columns[i]:
+                        with columns[i % 4]:
                             draw_heatmap(heatmap_data, sensor)
                 else:
                     st.write('Choose columns to draw heatmap')

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import polars as pl
 from data_analyzer import DataAnalyzer
 import streamlit as st
-from location_names import location_names
+from dictionaries import location_names
 
 
 def initialize_state():
@@ -193,8 +193,12 @@ else:
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.line_chart(location, start_time, end_time)
+            #else:
+            #    analyzer.line_chart_no_location(start_time, end_time)
         if action == 'Heatmap':
             location = choose_location()
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.draw_heatmaps(location, start_time, end_time)
+            #else:
+            #    analyzer.line_chart_no_location(start_time, end_time)

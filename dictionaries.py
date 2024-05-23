@@ -25,3 +25,36 @@ location_names = {
     "s-e05a1b339ef0": "Huoltohalli - EM #25",
     "s-e05a1b33a0f0": "Päärakennus - EM #26"
 }
+
+units = {
+    "l1_current": "A",
+    "l1_voltage": "V",
+    "l1_active_power": "W",
+    "l1_apparent_power": "VA",
+    "l1_power_factor": "",
+    "l1_frequency": "Hz",
+    "l2_current": "A",
+    "l2_voltage": "V",
+    "l2_active_power": "W",
+    "l2_apparent_power": "VA",
+    "l2_power_factor": "",
+    "l2_frequency": "Hz",
+    "l3_current": "A",
+    "l3_voltage": "V",
+    "l3_active_power": "W",
+    "l3_apparent_power": "VA",
+    "l3_power_factor": "",
+    "l3_frequency": "Hz",
+    "l1_total_active_energy": "Wh",
+    "l1_total_active_returned_energy": "Wh",
+    "l2_total_active_energy": "Wh",
+    "l3_total_active_returned_energy": "Wh",
+    "l3_total_active_energy": "Wh",
+    "l3_total_active_returned_energy_right": "Wh",
+    "total_current": "A",
+    "total_active_power": "W",
+    "total_apparent_power": "VA",
+    "total_active_energy": "Wh",
+    "total_active_returned_energy": "Wh",
+    "price": "¢"
+}
