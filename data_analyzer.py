@@ -60,7 +60,10 @@ def get_hourly_values(df):
     numeric_cols = df.select_dtypes(include='number').columns
     numeric_df = df[numeric_cols]
 
-    # Resample the data to hourly frequency and compute the mean for each hour
+    # Fill None values with NaN
+    numeric_df = numeric_df.fillna(pd.NA)
+
+    # Resample the data to hourly frequency and compute the mean, skipping NaN values
     hourly_df = numeric_df.resample('h').mean()
     return hourly_df
 
@@ -242,9 +245,8 @@ class DataAnalyzer:
             else:
                 lines = [col for col in profitability_df.columns if col != 'ts']
                 if len(lines) > 0:
-                    # Fill None values with 0
-                    profitability_df[lines] = profitability_df[lines].fillna(0)
-                    profitability_df['total_profitability'] = profitability_df[lines].sum(axis=1)
+                    # Add column for total profitability
+                    profitability_df['total_profitability'] = profitability_df[lines].sum(axis=1, skipna=True)
 
                     # Get hourly values
                     hourly_df = get_hourly_values(profitability_df)
