@@ -200,15 +200,11 @@ else:
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.line_chart(location, start_time, end_time)
-            #else:
-            #    analyzer.line_chart_no_location(start_time, end_time)
         if action == 'Heatmap':
             location = choose_location()
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.draw_heatmaps(location, start_time, end_time)
-            #else:
-            #    analyzer.line_chart_no_location(start_time, end_time)
         if action == 'Profitability':
             if chosen_dataframe == 'L1, L2, L3 values':
                 st.write('Profitability not available for this dataframe')
