@@ -244,17 +244,16 @@ class DataAnalyzer:
                 if len(lines) > 0:
                     # Fill None values with 0
                     profitability_df[lines] = profitability_df[lines].fillna(0)
+                    profitability_df['total_profitability'] = profitability_df[lines].sum(axis=1)
 
                     # Get hourly values
                     hourly_df = get_hourly_values(profitability_df)
 
-                    # Make column for total profitability
-                    numeric_columns = [col for col in hourly_df.columns if col != 'ts']
-                    hourly_df['total_profitability'] = hourly_df[numeric_columns].sum(axis=1)
-
                     # Calculate the total cost
-                    cost = round(hourly_df['total_profitability'].sum(), 2)
-
+                    cost = hourly_df['total_profitability'].sum()
+                    #cost2 = profitability_df['total_profitability'].sum() / 3600
+                    #print("################################# COST:", cost, cost2)
+                    st.write(hourly_df)
                     # Draw the line chart
                     st.write(f'<h3>Profitability (€/h)</h3', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
