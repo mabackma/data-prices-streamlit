@@ -245,11 +245,12 @@ class DataAnalyzer:
             else:
                 lines = [col for col in profitability_df.columns if col != 'ts']
                 if len(lines) > 0:
-                    # Replace negative values with NA
-                    #for col in lines:
-                    #    profitability_df[col] = profitability_df[col].where(profitability_df[col] >= 0, pd.NA)
-                    # Remove rows with negative values
-                    profitability_df = profitability_df[(profitability_df[lines] >= 0).all(axis=1)]
+                    # Replace negative values with NaN temporarily
+                    profitability_df[lines] = profitability_df[lines].where(profitability_df[lines] >= 0)
+
+                    # Replace NaN values with the median of each column
+                    profitability_df[lines] = profitability_df[lines].fillna(profitability_df[lines].median())
+                    st.write(profitability_df)
                     #TODO: Fix adding line with None values to dataframe
 
                     # Add column for total profitability
