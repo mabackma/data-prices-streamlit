@@ -253,9 +253,9 @@ class DataAnalyzer:
                     hourly_df['total_profitability'] = hourly_df[numeric_columns].sum(axis=1)
 
                     # Draw the line chart
-                    st.write(f'<h3>profitability during {start} - {end}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h3>profitability (€/h) during {start} - {end}</h3>', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
-                    st.write(f'<h3>Total profitability during {start} - {end}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h3>Total profitability (€/h) during {start} - {end}</h3>', unsafe_allow_html=True)
                     st.line_chart(hourly_df['total_profitability'])
                 else:
                     st.write('Choose columns to draw line chart')
