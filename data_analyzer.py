@@ -19,6 +19,10 @@ def callback_heatmap():
     st.session_state.heatmap_button_clicked = True
 
 
+def callback_profitability():
+    st.session_state.profitability_button_clicked = True
+
+
 # Replace any characters that are not allowed in a filename
 def sanitize_filename(filename):
     sanitized_filename = ''
@@ -190,3 +194,68 @@ class DataAnalyzer:
                     st.write('Choose columns to draw heatmap')
             else:
                 st.write('Choose another time range')
+
+    def prepare_profitability_df(self, start, end):
+        query_string = f"""
+            SELECT ts, meter_id, profitability
+            FROM self
+            WHERE ts >= '{start}' AND ts < '{end}'
+        """
+        profitability_df = self.dataframe.sql(query_string)
+
+        cols = st.columns(5)
+        locations = []
+        for i, location in enumerate(st.session_state.locations, start=0):
+            with cols[i % 5]:
+                if st.checkbox(location_names[location]):
+                    locations.append(location)
+
+        # Filter the dataframe for the selected locations
+        if locations:
+            profitability_df = profitability_df.filter(pl.col('meter_id').is_in(locations))
+        else:
+            profitability_df = pl.DataFrame()
+
+        # Convert to pandas before drawing line chart
+        profitability_df = profitability_df.to_pandas()
+        if not profitability_df.empty:
+            # Pivot the dataframe to have a column for each location's profitability
+            profitability_pivot_df = profitability_df.pivot_table(index='ts', columns='meter_id',
+                                                                  values='profitability')
+            # Rename the columns to include the location names
+            profitability_pivot_df.rename(columns=location_names, inplace=True)
+        else:
+            profitability_pivot_df = pd.DataFrame()
+
+        return profitability_pivot_df
+
+    def profitability_line_chart(self, start, end):
+        profitability_df = self.prepare_profitability_df(start, end)
+
+        if not st.session_state.profitability_button_clicked:
+            st.button('Click here to see profitability line charts', on_click=callback_profitability)
+        if st.session_state.profitability_button_clicked:
+            # Check if there are any selected locations
+            if profitability_df.empty:
+                st.write("No data available for the selected locations and time range.")
+                return
+            else:
+                lines = [col for col in profitability_df.columns if col != 'ts']
+                if len(lines) > 0:
+                    # Fill None values with 0
+                    profitability_df[lines] = profitability_df[lines].fillna(0)
+
+                    # Get hourly values
+                    hourly_df = get_hourly_values(profitability_df)
+
+                    # Make column for total profitability
+                    numeric_columns = [col for col in hourly_df.columns if col != 'ts']
+                    hourly_df['total_profitability'] = hourly_df[numeric_columns].sum(axis=1)
+
+                    # Draw the line chart
+                    st.write(f'<h3>profitability during {start} - {end}</h3>', unsafe_allow_html=True)
+                    st.line_chart(hourly_df[lines])
+                    st.write(f'<h3>Total profitability during {start} - {end}</h3>', unsafe_allow_html=True)
+                    st.line_chart(hourly_df['total_profitability'])
+                else:
+                    st.write('Choose columns to draw line chart')

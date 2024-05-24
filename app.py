@@ -12,6 +12,8 @@ def initialize_state():
         st.session_state.line_chart_button_clicked = False
     if "heatmap_button_clicked" not in st.session_state:
         st.session_state.heatmap_button_clicked = False
+    if "profitability_button_clicked" not in st.session_state:
+        st.session_state.profitability_button_clicked = False
     if "analyzer_L" not in st.session_state:
         st.session_state.analyzer_L = None
     if "analyzer_total" not in st.session_state:
@@ -27,7 +29,7 @@ def choose_dataframe():
 
 
 def show_options():
-    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap']
+    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap', 'Profitability']
     selected_option = st.radio('Select Action', list(options))
     return selected_option
 
@@ -148,6 +150,7 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
         df_L1_L2_L3 = df_L1_L2_L3.rename({col: col.replace(' ', '_').lower() for col in df_L1_L2_L3.columns})
         df_total = df_all.drop(data_columns)
         df_total = df_total.rename({col: col.replace(' ', '_').lower() for col in df_total.columns})
+        df_total = df_total.with_columns((pl.col('total_active_power') * pl.col('price')).alias('profitability'))
 
         st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
         st.session_state.analyzer_total = DataAnalyzer(df_total, 'Total')
@@ -177,6 +180,8 @@ else:
             st.session_state.line_chart_button_clicked = False
         if action != 'Heatmap':
             st.session_state.heatmap_button_clicked = False
+        if action != 'Profitability':
+            st.session_state.profitability_button_clicked = False
         if action == 'List columns':
             st.write('<h3>Columns in the DataFrame:</h3>', unsafe_allow_html=True)
             analyzer.list_columns()
@@ -202,3 +207,9 @@ else:
                 analyzer.draw_heatmaps(location, start_time, end_time)
             #else:
             #    analyzer.line_chart_no_location(start_time, end_time)
+        if action == 'Profitability':
+            if chosen_dataframe == 'L1, L2, L3 values':
+                st.write('Profitability not available for this dataframe')
+            else:
+                start_time, end_time = choose_time_interval()
+                analyzer.profitability_line_chart(start_time, end_time)
