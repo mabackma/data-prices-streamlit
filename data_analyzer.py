@@ -5,7 +5,6 @@ import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
 from dictionaries import location_names, units
-import pytz
 
 
 def callback_query():
@@ -68,8 +67,6 @@ def to_helsinki_time(df):
 
 
 def get_hourly_values(df):
-    df = to_helsinki_time(df)
-
     # Select only numeric columns
     numeric_cols = df.select_dtypes(include='number').columns
     numeric_df = df[numeric_cols]
@@ -169,6 +166,7 @@ class DataAnalyzer:
                     # Fill None values with 0
                     location_df[lines] = location_df[lines].fillna(0)
                     location_df[lines] = scaler.fit_transform(location_df[lines])
+                    location_df = to_helsinki_time(location_df)
 
                     # Get hourly values
                     hourly_df = get_hourly_values(location_df)
@@ -269,6 +267,7 @@ class DataAnalyzer:
 
                     # Add column for total profitability
                     profitability_df['total_profitability'] = profitability_df[lines].sum(axis=1, skipna=True)
+                    profitability_df = to_helsinki_time(profitability_df)
 
                     # Get hourly values
                     hourly_df = get_hourly_values(profitability_df)
