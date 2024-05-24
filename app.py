@@ -151,7 +151,7 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
         df_total = df_all.drop(data_columns)
         df_total = df_total.rename({col: col.replace(' ', '_').lower() for col in df_total.columns})
 
-        # Prices are in EUR / MWh and total_active_power is in Wh, so divide by 1 000 000 to get EUR / h
+        # Prices are in EUR / MWh and total_active_power is in W, so divide by 1 000 000 to get EUR / h
         df_total = df_total.with_columns(((pl.col('total_active_power') * pl.col('price'))/1000000).alias('profitability'))
 
         st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
