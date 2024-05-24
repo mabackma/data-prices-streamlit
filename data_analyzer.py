@@ -245,10 +245,14 @@ class DataAnalyzer:
             else:
                 lines = [col for col in profitability_df.columns if col != 'ts']
                 if len(lines) > 0:
+                    # Replace negative values with NA
+                    for col in lines:
+                        profitability_df[col] = profitability_df[col].where(profitability_df[col] >= 0, pd.NA)
                     # Remove rows with negative values
-                    profitability_df = profitability_df[(profitability_df[lines] >= 0).all(axis=1)]
+                    #profitability_df = profitability_df[(profitability_df[lines] >= 0).all(axis=1)]
 
                     # Add column for total profitability
+                    #profitability_df['total_profitability'] = profitability_df[lines].fillna(0).sum(axis=1)
                     profitability_df['total_profitability'] = profitability_df[lines].sum(axis=1, skipna=True)
 
                     # Get hourly values
