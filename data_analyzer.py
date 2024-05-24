@@ -5,6 +5,7 @@ import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
 from dictionaries import location_names, units
+import pytz
 
 
 def callback_query():
@@ -55,7 +56,20 @@ def switch(symbol):
     return symbol
 
 
+def to_helsinki_time(df):
+    if 'ts' in df.columns:
+        df['ts'] = pd.to_datetime(df['ts'])
+        if df['ts'].iloc[0].month < 6:
+            df['ts'] = df['ts'].dt.tz_localize('Europe/Helsinki', nonexistent='shift_forward')
+        else:
+            df['ts'] = df['ts'].dt.tz_localize('Europe/Helsinki', nonexistent='shift_backward')
+        df.set_index('ts', inplace=True)
+    return df
+
+
 def get_hourly_values(df):
+    df = to_helsinki_time(df)
+
     # Select only numeric columns
     numeric_cols = df.select_dtypes(include='number').columns
     numeric_df = df[numeric_cols]
@@ -132,7 +146,7 @@ class DataAnalyzer:
         sensors = []
         for i, sensor in enumerate(location_df.columns, start=-2):
             with cols[i % number_of_columns]:
-                if sensor != 'ts' and sensor != 'meter_id':
+                if sensor != 'ts' and sensor != 'meter_id' and sensor != 'profitability':
                     if st.checkbox(sensor):
                         sensors.append(sensor)
 
@@ -182,6 +196,7 @@ class DataAnalyzer:
                     # Prepare data for heatmap
                     location_df['hour'] = location_df.index.hour
                     location_df['day'] = location_df.index.date
+                    location_df = to_helsinki_time(location_df)
 
                     st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
                     st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
@@ -190,7 +205,8 @@ class DataAnalyzer:
                     # Draw heatmaps in columns
                     columns = st.columns(4)
                     for i, sensor in enumerate(sensors, start=0):
-                        heatmap_data = location_df.pivot_table(index='day', columns='hour', values=sensor, aggfunc='mean')
+                        heatmap_data = location_df.pivot_table(index='day', columns='hour', values=sensor,
+                                                               aggfunc='mean')
                         with columns[i % 4]:
                             draw_heatmap(heatmap_data, sensor)
                 else:
