@@ -252,10 +252,15 @@ class DataAnalyzer:
                     numeric_columns = [col for col in hourly_df.columns if col != 'ts']
                     hourly_df['total_profitability'] = hourly_df[numeric_columns].sum(axis=1)
 
+                    # Calculate the total cost
+                    cost = round(hourly_df['total_profitability'].sum(), 2)
+
                     # Draw the line chart
-                    st.write(f'<h3>profitability (€/h) during {start} - {end}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h3>Profitability (€/h)</h3', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
-                    st.write(f'<h3>Total profitability (€/h) during {start} - {end}</h3>', unsafe_allow_html=True)
+                    st.write(f'<h3>Total profitability (€/h)</h3>', unsafe_allow_html=True)
                     st.line_chart(hourly_df['total_profitability'])
+                    st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
+                    st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
                 else:
                     st.write('Choose columns to draw line chart')
