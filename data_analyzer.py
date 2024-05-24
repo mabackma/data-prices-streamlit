@@ -250,11 +250,8 @@ class DataAnalyzer:
 
                     # Replace NaN values with the median of each column
                     profitability_df[lines] = profitability_df[lines].fillna(profitability_df[lines].median())
-                    st.write(profitability_df)
-                    #TODO: Fix adding line with None values to dataframe
 
                     # Add column for total profitability
-                    #profitability_df['total_profitability'] = profitability_df[lines].fillna(0).sum(axis=1)
                     profitability_df['total_profitability'] = profitability_df[lines].sum(axis=1, skipna=True)
 
                     # Get hourly values
