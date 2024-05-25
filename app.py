@@ -29,7 +29,8 @@ def choose_dataframe():
 
 
 def show_options():
-    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap', 'Profitability']
+    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap', 'Profitability',
+               'Cost-effectiveness']
     selected_option = st.radio('Select Action', list(options))
     return selected_option
 
@@ -152,7 +153,11 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
         df_total = df_total.rename({col: col.replace(' ', '_').lower() for col in df_total.columns})
 
         # Prices are in EUR / MWh and total_active_power is in W, so divide by 1 000 000 to get EUR / h
-        df_total = df_total.with_columns(((pl.col('total_active_power') * pl.col('price'))/1000000).alias('profitability'))
+        df_total = df_total.with_columns(
+            ((pl.col('total_active_power') * pl.col('price'))/1000000).alias('profitability'))
+        # Price to active power ratio column
+        df_total = df_total.with_columns(
+            ((pl.col('price')) / pl.col('total_active_power')).alias('price_power_ratio'))
 
         st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
         st.session_state.analyzer_total = DataAnalyzer(df_total, 'Total')
@@ -211,3 +216,9 @@ else:
             else:
                 start_time, end_time = choose_time_interval()
                 analyzer.profitability_line_chart(start_time, end_time)
+        if action == 'Cost-effectiveness':
+            if chosen_dataframe == 'L1, L2, L3 values':
+                st.write('Cost-effectiveness not available for this dataframe')
+            else:
+                start_time, end_time = choose_time_interval()
+                analyzer.cost_effectiveness(start_time, end_time)

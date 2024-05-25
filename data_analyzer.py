@@ -1,6 +1,7 @@
 import pathlib
 import polars as pl
 import pandas as pd
+import numpy as np
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
@@ -254,7 +255,7 @@ class DataAnalyzer:
         if st.session_state.profitability_button_clicked:
             # Check if there are any selected locations
             if profitability_df.empty:
-                st.write("No data available for the selected locations and time range.")
+                st.write("No data available for the selected time range.")
                 return
             else:
                 lines = [col for col in profitability_df.columns if col != 'ts']
@@ -284,3 +285,41 @@ class DataAnalyzer:
                     st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
                 else:
                     st.write('Choose columns to draw line chart')
+
+    def cost_effectiveness(self, start, end):
+        # First, filter the DataFrame to include only the relevant columns
+        cost_df = self.dataframe[['ts', 'profitability', 'price_power_ratio']]
+        cost_df = cost_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
+        cost_df['ts'] = pd.to_datetime(cost_df['ts'])
+        cost_df.set_index('ts', inplace=True)
+
+        if cost_df.empty:
+            st.write("No data available for the selected time range.")
+            return
+        else:
+            cost_df['profitability'] = cost_df['profitability'].where(cost_df['profitability'] >= 0)
+            cost_df['profitability'] = cost_df['profitability'].fillna(cost_df['profitability'].median())
+            cost_df['price_power_ratio'] = cost_df['price_power_ratio'].where(cost_df['price_power_ratio'] >= 0)
+            cost_df['price_power_ratio'] = cost_df['price_power_ratio'].fillna(cost_df['price_power_ratio'].median())
+            cost_hourly_df = cost_df.resample('h').mean().reset_index()
+            cost = cost_hourly_df['profitability'].sum()
+            cost_hourly_df = to_helsinki_time(cost_hourly_df)
+
+            # Normalize the lines for line chart
+            scaler = MinMaxScaler()
+            lines = ['profitability', 'price_power_ratio']
+            cost_hourly_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+            cost_hourly_df[lines] = cost_hourly_df[lines].fillna(0)
+            cost_hourly_df[lines] = scaler.fit_transform(
+                cost_hourly_df[lines])
+            cost_hourly_df = to_helsinki_time(cost_hourly_df)
+
+            st.write(f'<h4>Profitability (€/h) and Cost-effectiveness:</h4>', unsafe_allow_html=True)
+            st.line_chart(cost_hourly_df[lines])
+            st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
+            st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
+
+            # Additional statistics
+            st.write('### Statistics')
+            st.write(cost_hourly_df['profitability'].describe())
+            st.write(cost_hourly_df['price_power_ratio'].describe())
