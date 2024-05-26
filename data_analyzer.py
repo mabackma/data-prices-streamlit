@@ -273,8 +273,7 @@ class DataAnalyzer:
                     # Add column for total profitability
                     hourly_df['total_profitability'] = hourly_df[lines].sum(axis=1, skipna=True)
                     hourly_df = to_helsinki_time(hourly_df)
-                    st.write('profitability HOURLY table:')
-                    st.write(hourly_df)
+
                     # Calculate the total cost
                     cost = hourly_df['total_profitability'].sum()
 
