@@ -305,6 +305,11 @@ class DataAnalyzer:
             cost = cost_hourly_df['profitability'].sum()
             cost_hourly_df = to_helsinki_time(cost_hourly_df)
 
+            st.write(f'<h4>Profitability (€/h)</h4>', unsafe_allow_html=True)
+            st.line_chart(cost_hourly_df['profitability'])
+            st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
+            st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
+
             # Normalize the lines for line chart
             scaler = MinMaxScaler()
             lines = ['profitability', 'power_price_ratio']
@@ -313,11 +318,8 @@ class DataAnalyzer:
             cost_hourly_df[lines] = scaler.fit_transform(
                 cost_hourly_df[lines])
             cost_hourly_df = to_helsinki_time(cost_hourly_df)
-
-            st.write(f'<h4>Profitability (€/h) and Cost-effectiveness:</h4>', unsafe_allow_html=True)
+            st.write(f'<h4>Profitability and Cost-effectiveness</h4>', unsafe_allow_html=True)
             st.line_chart(cost_hourly_df[lines])
-            st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
-            st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
 
             # Additional statistics
             st.write('### Statistics')
