@@ -72,11 +72,14 @@ def get_hourly_values(df):
     numeric_cols = df.select_dtypes(include='number').columns
     numeric_df = df[numeric_cols]
 
+    # Remove rows where total profitability is 0
+    #numeric_df = numeric_df[numeric_df['total_profitability'] > 0]
     # Fill None values with NaN
-    numeric_df = numeric_df.fillna(pd.NA)
+    #numeric_df = numeric_df.fillna(pd.NA)
 
-    # Resample the data to hourly frequency and compute the mean, skipping NaN values
+    # Resample the data to hourly frequency and compute the mean
     hourly_df = numeric_df.resample('h').mean()
+
     return hourly_df
 
 
@@ -144,7 +147,7 @@ class DataAnalyzer:
         sensors = []
         for i, sensor in enumerate(location_df.columns, start=-2):
             with cols[i % number_of_columns]:
-                if sensor != 'ts' and sensor != 'meter_id' and sensor != 'profitability':
+                if sensor != 'ts' and sensor != 'meter_id' and sensor != 'profitability' and sensor != 'power_price_ratio':
                     if st.checkbox(sensor):
                         sensors.append(sensor)
 
@@ -236,6 +239,7 @@ class DataAnalyzer:
 
         # Convert to pandas before drawing line chart
         profitability_df = profitability_df.to_pandas()
+
         if not profitability_df.empty:
             # Pivot the dataframe to have a column for each location's profitability
             profitability_pivot_df = profitability_df.pivot_table(index='ts', columns='meter_id',
@@ -263,16 +267,14 @@ class DataAnalyzer:
                     # Replace negative values with NaN temporarily
                     profitability_df[lines] = profitability_df[lines].where(profitability_df[lines] >= 0)
 
-                    # Replace NaN values with the median of each column
-                    profitability_df[lines] = profitability_df[lines].fillna(profitability_df[lines].median())
-
-                    # Add column for total profitability
-                    profitability_df['total_profitability'] = profitability_df[lines].sum(axis=1, skipna=True)
-                    profitability_df = to_helsinki_time(profitability_df)
-
                     # Get hourly values
                     hourly_df = get_hourly_values(profitability_df)
 
+                    # Add column for total profitability
+                    hourly_df['total_profitability'] = hourly_df[lines].sum(axis=1, skipna=True)
+                    hourly_df = to_helsinki_time(hourly_df)
+                    st.write('profitability HOURLY table:')
+                    st.write(hourly_df)
                     # Calculate the total cost
                     cost = hourly_df['total_profitability'].sum()
 
