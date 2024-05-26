@@ -305,7 +305,7 @@ class DataAnalyzer:
             cost = cost_hourly_df['profitability'].sum()
             cost_hourly_df = to_helsinki_time(cost_hourly_df)
 
-            st.write(f'<h4>Profitability (€/h)</h4>', unsafe_allow_html=True)
+            st.write(f'<h2>Profitability (€/h)</h2>', unsafe_allow_html=True)
             st.line_chart(cost_hourly_df['profitability'])
             st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
             st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
@@ -318,7 +318,7 @@ class DataAnalyzer:
             cost_hourly_df[lines] = scaler.fit_transform(
                 cost_hourly_df[lines])
             cost_hourly_df = to_helsinki_time(cost_hourly_df)
-            st.write(f'<h4>Profitability and Cost-effectiveness</h4>', unsafe_allow_html=True)
+            st.write(f'<h2>Profitability and Cost-effectiveness</h2>', unsafe_allow_html=True)
             st.line_chart(cost_hourly_df[lines])
 
             # Additional statistics
