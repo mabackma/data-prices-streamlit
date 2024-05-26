@@ -157,7 +157,7 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
             ((pl.col('total_active_power') * pl.col('price'))/1000000).alias('profitability'))
         # Price to active power ratio column
         df_total = df_total.with_columns(
-            ((pl.col('price')) / pl.col('total_active_power')).alias('price_power_ratio'))
+            ((pl.col('total_active_power')) / pl.col('price')).alias('power_price_ratio'))
 
         st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
         st.session_state.analyzer_total = DataAnalyzer(df_total, 'Total')

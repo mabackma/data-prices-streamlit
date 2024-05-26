@@ -288,7 +288,7 @@ class DataAnalyzer:
 
     def cost_effectiveness(self, start, end):
         # First, filter the DataFrame to include only the relevant columns
-        cost_df = self.dataframe[['ts', 'profitability', 'price_power_ratio']]
+        cost_df = self.dataframe[['ts', 'profitability', 'power_price_ratio']]
         cost_df = cost_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
         cost_df['ts'] = pd.to_datetime(cost_df['ts'])
         cost_df.set_index('ts', inplace=True)
@@ -299,15 +299,15 @@ class DataAnalyzer:
         else:
             cost_df['profitability'] = cost_df['profitability'].where(cost_df['profitability'] >= 0)
             cost_df['profitability'] = cost_df['profitability'].fillna(cost_df['profitability'].median())
-            cost_df['price_power_ratio'] = cost_df['price_power_ratio'].where(cost_df['price_power_ratio'] >= 0)
-            cost_df['price_power_ratio'] = cost_df['price_power_ratio'].fillna(cost_df['price_power_ratio'].median())
+            cost_df['power_price_ratio'] = cost_df['power_price_ratio'].where(cost_df['power_price_ratio'] >= 0)
+            cost_df['power_price_ratio'] = cost_df['power_price_ratio'].fillna(cost_df['power_price_ratio'].median())
             cost_hourly_df = cost_df.resample('h').mean().reset_index()
             cost = cost_hourly_df['profitability'].sum()
             cost_hourly_df = to_helsinki_time(cost_hourly_df)
 
             # Normalize the lines for line chart
             scaler = MinMaxScaler()
-            lines = ['profitability', 'price_power_ratio']
+            lines = ['profitability', 'power_price_ratio']
             cost_hourly_df.replace([np.inf, -np.inf], np.nan, inplace=True)
             cost_hourly_df[lines] = cost_hourly_df[lines].fillna(0)
             cost_hourly_df[lines] = scaler.fit_transform(
@@ -322,4 +322,4 @@ class DataAnalyzer:
             # Additional statistics
             st.write('### Statistics')
             st.write(cost_hourly_df['profitability'].describe())
-            st.write(cost_hourly_df['price_power_ratio'].describe())
+            st.write(cost_hourly_df['power_price_ratio'].describe())
