@@ -163,9 +163,6 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
         # Prices are in EUR / MWh and total_active_power is in W, so divide by 1 000 000 to get EUR / h
         df_total = df_total.with_columns(
             ((pl.col('total_active_power') * pl.col('price'))/1000000).alias('profitability'))
-        # Price to active power ratio column
-        df_total = df_total.with_columns(
-            ((pl.col('total_active_power')) / pl.col('price')).alias('power_price_ratio'))
 
         st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
         st.session_state.analyzer_total = DataAnalyzer(df_total, 'Total')

@@ -166,6 +166,11 @@ class DataAnalyzer:
                 # Normalize selected columns
                 scaler = MinMaxScaler()
                 if len(lines) > 0:
+                    st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
+                    st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
+                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
+                    if not st.checkbox("Show interruptions"):
+                        location_df[lines] = location_df[lines].fillna(0)
                     location_df[lines] = scaler.fit_transform(location_df[lines])
                     location_df = to_helsinki_time(location_df)
 
@@ -173,9 +178,6 @@ class DataAnalyzer:
                     hourly_df = get_hourly_values(location_df)
 
                     # Draw the line chart
-                    st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
-                    st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
-                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
                 else:
                     st.write('Choose columns to draw line chart')
