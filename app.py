@@ -146,6 +146,14 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
             elif 'ts' not in col and 'meter_id' not in col and 'price' not in col:
                 data_columns.append(col)
 
+        # Remove negative prices
+        df_all = df_all.with_columns(
+            pl.when(pl.col('price') < 0)
+            .then(0)
+            .otherwise(pl.col('price'))
+            .alias('price')
+        )
+
         # Create df_L1_L2_L3 and df_total dataframes
         df_L1_L2_L3 = df_all.drop(total_columns)
         df_L1_L2_L3 = df_L1_L2_L3.rename({col: col.replace(' ', '_').lower() for col in df_L1_L2_L3.columns})
