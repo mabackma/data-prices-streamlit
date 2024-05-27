@@ -163,7 +163,7 @@ class DataAnalyzer:
                 scaler = MinMaxScaler()
                 if len(lines) > 0:
                     # Fill None values with 0
-                    location_df[lines] = location_df[lines].fillna(0)
+                    #location_df[lines] = location_df[lines].fillna(0)
                     location_df[lines] = scaler.fit_transform(location_df[lines])
                     location_df = to_helsinki_time(location_df)
 
@@ -188,7 +188,7 @@ class DataAnalyzer:
         if st.session_state.heatmap_button_clicked:
             if len(location_df) > 0:
                 if len(sensors) > 0:
-                    location_df[sensors] = location_df[sensors].fillna(0)
+                    #location_df[sensors] = location_df[sensors].fillna(0)
 
                     # Prepare data for heatmap
                     location_df['hour'] = location_df.index.hour
@@ -306,27 +306,24 @@ class DataAnalyzer:
             ratio_df = ratio_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
             ratio_df['ts'] = pd.to_datetime(ratio_df['ts'])
             ratio_df.set_index('ts', inplace=True)
-
+            st.write(ratio_df)
             # Aggregate profitability by summing and total_active_power by summing
             aggregated_df = ratio_df.groupby('ts').agg({
                 'total_active_power': 'sum',  # Sum total_active_power
                 'price': 'mean'  # Use average price if it varies by meter_id
             }).reset_index()
             aggregated_df.set_index('ts', inplace=True)
-
+            st.write(aggregated_df)
             # Make column for Cost-effectiveness (power / price)
             aggregated_df['power_price_ratio'] = aggregated_df.apply(
-                lambda row: (row['total_active_power'] / 1_000_000) / row['price'], axis=1
+                lambda row: row['total_active_power'] / row['price'], axis=1
             )
-
-            aggregated_df['power_price_ratio'] = aggregated_df['power_price_ratio'].where(
-                aggregated_df['power_price_ratio'] >= 0)
-            aggregated_df['power_price_ratio'] = aggregated_df['power_price_ratio'].fillna(
-                aggregated_df['power_price_ratio'].mean())
+            st.write(aggregated_df)
             ratio_hourly_df = get_hourly_values(aggregated_df)
 
-            # Add column from profitability dataframe. Both dataframes have the same timestamps.
-            ratio_hourly_df['total_profitability'] = cost_hourly_df['total_profitability']
+            # Add column from profitability dataframe to ratio dataframe. Both dataframes have the same timestamps.
+            ratio_hourly_df = pd.merge(ratio_hourly_df, cost_hourly_df[['total_profitability']], left_index=True,
+                                 right_index=True)
 
             # Normalize the lines for line chart
             scaler = MinMaxScaler()
