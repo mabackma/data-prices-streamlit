@@ -20,8 +20,6 @@ def initialize_state():
         st.session_state.analyzer_total = None
     if "locations" not in st.session_state:
         st.session_state.locations = []
-    if "hide_interruptions" not in st.session_state:
-        st.session_state.hide_interruptions = True
 
 
 def choose_dataframe():

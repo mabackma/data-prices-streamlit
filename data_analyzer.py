@@ -72,12 +72,19 @@ def get_hourly_values(df):
     numeric_cols = df.select_dtypes(include='number').columns
     numeric_df = df[numeric_cols]
 
-    if st.session_state.hide_interruptions:
-        numeric_df[numeric_cols] = numeric_df[numeric_cols].fillna(0)
+    # Resample the data to hourly frequency and compute the mean
+    hourly_df = numeric_df.resample('h').mean()
+    return hourly_df
+
+
+def get_hourly_values_fill_none(df):
+    # Select only numeric columns
+    numeric_cols = df.select_dtypes(include='number').columns
+    numeric_df = df[numeric_cols]
+    numeric_df[numeric_cols] = numeric_df[numeric_cols].fillna(0)
 
     # Resample the data to hourly frequency and compute the mean
     hourly_df = numeric_df.resample('h').mean()
-
     return hourly_df
 
 
@@ -178,12 +185,10 @@ class DataAnalyzer:
 
                     # When checked, lines will contain None values, otherwise None values are set to 0
                     if st.checkbox("Hide interruptions"):
-                        st.session_state.hide_interruptions = True
+                        hourly_df = get_hourly_values_fill_none(location_df)
                     else:
-                        st.session_state.hide_interruptions = False
+                        hourly_df = get_hourly_values(location_df)
 
-                    # Get hourly values
-                    hourly_df = get_hourly_values(location_df)
                     st.line_chart(hourly_df[lines])
                 else:
                     st.write('Choose columns to draw line chart')
