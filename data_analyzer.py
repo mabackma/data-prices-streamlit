@@ -111,6 +111,8 @@ class DataAnalyzer:
     def describe_dataframe(self):
         return self.dataframe.describe()
 
+    # Makes a query to the dataframe and saves the result in a parquet file
+    # The filename is the query string
     def query_with_sql(self):
         query_string = st.text_input('Enter the SQL query:')
 
@@ -132,6 +134,7 @@ class DataAnalyzer:
             st.write(result.head())
             st.write(f"Number of rows: {result.height}")
 
+    # Returns the dataframe for a chosen meter_id and its chosen sensors
     def prepare_dataframe(self, location, start, end):
         query_string = f"SELECT * FROM self WHERE meter_id = '{location}'"
         location_df = self.dataframe.sql(query_string)
@@ -152,6 +155,7 @@ class DataAnalyzer:
         location_df.set_index('ts', inplace=True, drop=False)
         return sensors, location_df
 
+    # Draws line charts for chosen sensors
     def line_chart(self, location, start, end):
         lines, location_df = self.prepare_dataframe(location, start, end)
 
@@ -162,8 +166,6 @@ class DataAnalyzer:
                 # Normalize selected columns
                 scaler = MinMaxScaler()
                 if len(lines) > 0:
-                    # Fill None values with 0
-                    #location_df[lines] = location_df[lines].fillna(0)
                     location_df[lines] = scaler.fit_transform(location_df[lines])
                     location_df = to_helsinki_time(location_df)
 
@@ -180,6 +182,7 @@ class DataAnalyzer:
             else:
                 st.write('Choose another time range')
 
+    # Draws heatmaps for chosen sensors
     def draw_heatmaps(self, location, start, end):
         sensors, location_df = self.prepare_dataframe(location, start, end)
 
@@ -211,6 +214,7 @@ class DataAnalyzer:
             else:
                 st.write('Choose another time range')
 
+    # Creates a pivot table with the chosen meter_id's as columns and profitability as their values.
     def prepare_profitability_df(self, start, end):
         query_string = f"""
             SELECT ts, meter_id, profitability
@@ -246,6 +250,8 @@ class DataAnalyzer:
 
         return profitability_pivot_df
 
+    # Plots profitability (power * price) for individual meter_id and plots their total profitability.
+    # Calculates the total cost for the chosen meters
     def profitability_line_chart(self, start, end):
         profitability_df = self.prepare_profitability_df(start, end)
 
@@ -259,6 +265,7 @@ class DataAnalyzer:
             else:
                 lines = [col for col in profitability_df.columns if col != 'ts']
                 if len(lines) > 0:
+                    # Keep only positive values
                     profitability_df[lines] = profitability_df[lines].where(profitability_df[lines] >= 0)
 
                     # Get hourly values
@@ -281,6 +288,8 @@ class DataAnalyzer:
                 else:
                     st.write('Choose columns to draw line chart')
 
+    # Plots Cost-effectiveness (power / price) and profitability (power * price)
+    # Calculates the total cost for all meters
     def cost_effectiveness(self, start, end):
         # Profitability dataframe (power * price)
         cost_df = self.dataframe.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
@@ -295,16 +304,17 @@ class DataAnalyzer:
             cost_pivot_df = cost_df.pivot_table(index='ts', columns='meter_id', values='profitability')
 
             lines = [col for col in cost_pivot_df.columns if col != 'ts']
+            # Keep only positive values
             cost_pivot_df[lines] = cost_pivot_df[lines].where(cost_pivot_df[lines] >= 0)
             cost_hourly_df = get_hourly_values(cost_pivot_df)
             cost_hourly_df['total_profitability'] = cost_hourly_df[lines].sum(axis=1, skipna=True)
             cost = cost_hourly_df['total_profitability'].sum()  # Total profitability
 
-            # Cost-effectiveness dataframe (power / price)
+            # Create Cost-effectiveness dataframe (power / price)
             ratio_df = self.dataframe.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).select(
                 ['ts', 'total_active_power', 'price'])
 
-            # Aggregate profitability by summing and total_active_power by summing
+            # Aggregate total_active_power by summing
             aggregated_df = ratio_df.groupby('ts').agg([
                 pl.col('total_active_power').sum().alias('total_active_power'),
                 pl.col('price').mean().alias('price')
@@ -317,9 +327,10 @@ class DataAnalyzer:
             aggregated_df['ts'] = pd.to_datetime(aggregated_df['ts'])
             aggregated_df.set_index('ts', inplace=True)
 
+            # Get hourly values
             ratio_hourly_df = get_hourly_values(aggregated_df)
 
-            # Merge the dataframes on the timestamp column
+            # Merge both of the dataframes on the timestamp column
             ratio_hourly_df = pd.merge(ratio_hourly_df, cost_hourly_df[['total_profitability']], left_index=True,
                                        right_index=True)
 
@@ -331,6 +342,7 @@ class DataAnalyzer:
             ratio_hourly_df[normalized_lines] = scaler.fit_transform(ratio_hourly_df[normalized_lines])
             ratio_hourly_df = to_helsinki_time(ratio_hourly_df)
 
+            # Draw the line chart
             st.write(f'<h2>Cost-effectiveness and Profitability (€/h)</h2>', unsafe_allow_html=True)
             st.line_chart(ratio_hourly_df[normalized_lines])
             st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
