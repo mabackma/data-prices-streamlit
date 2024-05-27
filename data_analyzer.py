@@ -284,8 +284,7 @@ class DataAnalyzer:
 
     def cost_effectiveness(self, start, end):
         # Profitability dataframe (power * price)
-        cost_df = self.dataframe
-        cost_df = cost_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
+        cost_df = self.dataframe.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
         cost_df['ts'] = pd.to_datetime(cost_df['ts'])
         cost_df.set_index('ts', inplace=True)
 
@@ -302,28 +301,27 @@ class DataAnalyzer:
             cost = cost_hourly_df['total_profitability'].sum()  # Total profitability
 
             # Cost-effectiveness dataframe (power / price)
-            ratio_df = self.dataframe[['ts', 'total_active_power', 'price']]
-            ratio_df = ratio_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
-            ratio_df['ts'] = pd.to_datetime(ratio_df['ts'])
-            ratio_df.set_index('ts', inplace=True)
-            st.write(ratio_df)
+            ratio_df = self.dataframe.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).select(
+                ['ts', 'total_active_power', 'price'])
+
             # Aggregate profitability by summing and total_active_power by summing
-            aggregated_df = ratio_df.groupby('ts').agg({
-                'total_active_power': 'sum',  # Sum total_active_power
-                'price': 'mean'  # Use average price if it varies by meter_id
-            }).reset_index()
-            aggregated_df.set_index('ts', inplace=True)
-            st.write(aggregated_df)
+            aggregated_df = ratio_df.groupby('ts').agg([
+                pl.col('total_active_power').sum().alias('total_active_power'),
+                pl.col('price').mean().alias('price')
+            ])
+
             # Make column for Cost-effectiveness (power / price)
-            aggregated_df['power_price_ratio'] = aggregated_df.apply(
-                lambda row: row['total_active_power'] / row['price'], axis=1
-            )
-            st.write(aggregated_df)
+            aggregated_df = aggregated_df.with_columns([
+                (pl.col('total_active_power') / pl.col('price')).alias('power_price_ratio')
+            ]).to_pandas()
+            aggregated_df['ts'] = pd.to_datetime(aggregated_df['ts'])
+            aggregated_df.set_index('ts', inplace=True)
+
             ratio_hourly_df = get_hourly_values(aggregated_df)
 
-            # Add column from profitability dataframe to ratio dataframe. Both dataframes have the same timestamps.
+            # Merge the dataframes on the timestamp column
             ratio_hourly_df = pd.merge(ratio_hourly_df, cost_hourly_df[['total_profitability']], left_index=True,
-                                 right_index=True)
+                                       right_index=True)
 
             # Normalize the lines for line chart
             scaler = MinMaxScaler()
@@ -333,7 +331,6 @@ class DataAnalyzer:
             ratio_hourly_df[normalized_lines] = scaler.fit_transform(ratio_hourly_df[normalized_lines])
             ratio_hourly_df = to_helsinki_time(ratio_hourly_df)
 
-            ratio_hourly_df[normalized_lines] = ratio_hourly_df[normalized_lines]
             st.write(f'<h2>Cost-effectiveness and Profitability (€/h)</h2>', unsafe_allow_html=True)
             st.line_chart(ratio_hourly_df[normalized_lines])
             st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
