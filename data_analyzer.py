@@ -183,7 +183,7 @@ class DataAnalyzer:
                     st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
                     st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
 
-                    # When checked, lines will contain None values, otherwise None values are set to 0
+                    # When checked, None values are set to 0
                     if st.checkbox("Hide interruptions"):
                         hourly_df = get_hourly_values_fill_none(location_df)
                     else:
