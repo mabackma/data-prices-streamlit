@@ -259,6 +259,9 @@ class DataAnalyzer:
             else:
                 lines = [col for col in profitability_df.columns if col != 'ts']
                 if len(lines) > 0:
+                    #profitability_df[lines] = profitability_df[lines].where(profitability_df[lines] >= 0)
+                    #profitability_df[lines] = profitability_df[lines].fillna(profitability_df[lines].mean())
+
                     # Get hourly values
                     hourly_df = get_hourly_values(profitability_df)
 
@@ -280,8 +283,8 @@ class DataAnalyzer:
                     st.write('Choose columns to draw line chart')
 
     def cost_effectiveness(self, start, end):
-        # First, filter the DataFrame to include only the relevant columns
-        cost_df = self.dataframe[['ts', 'meter_id', 'total_active_power', 'price']]
+        # Profitability dataframe (power * price)
+        cost_df = self.dataframe
         cost_df = cost_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
         cost_df['ts'] = pd.to_datetime(cost_df['ts'])
         cost_df.set_index('ts', inplace=True)
@@ -290,51 +293,51 @@ class DataAnalyzer:
             st.write("No data available for the selected time range.")
             return
         else:
+            # Pivot the dataframe to have a column for each location's profitability
+            cost_pivot_df = cost_df.pivot_table(index='ts', columns='meter_id', values='profitability')
+
+            lines = [col for col in cost_pivot_df.columns if col != 'ts']
+            cost_hourly_df = get_hourly_values(cost_pivot_df)
+            cost_hourly_df['total_profitability'] = cost_hourly_df[lines].sum(axis=1, skipna=True)
+            cost = cost_hourly_df['total_profitability'].sum()  # Total profitability
+
+            # Cost-effectiveness dataframe (power / price)
+            ratio_df = self.dataframe[['ts', 'total_active_power', 'price']]
+            ratio_df = ratio_df.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
+            ratio_df['ts'] = pd.to_datetime(ratio_df['ts'])
+            ratio_df.set_index('ts', inplace=True)
+
             # Aggregate profitability by summing and total_active_power by summing
-            aggregated_df = cost_df.groupby('ts').agg({
+            aggregated_df = ratio_df.groupby('ts').agg({
                 'total_active_power': 'sum',  # Sum total_active_power
                 'price': 'mean'  # Use average price if it varies by meter_id
             }).reset_index()
             aggregated_df.set_index('ts', inplace=True)
 
-            # Calculate profitability using the summed total_active_power and average price
-            aggregated_df['profitability'] = (aggregated_df['total_active_power'] * aggregated_df['price']) / 1000000
-            # Calculate power_price_ratio using the summed total_active_power and average price
-            aggregated_df['power_price_ratio'] = aggregated_df['total_active_power'] / aggregated_df['price']
+            # Make column for Cost-effectiveness (power / price)
+            aggregated_df['power_price_ratio'] = aggregated_df.apply(
+                lambda row: (row['total_active_power'] / 1_000_000) / row['price'], axis=1
+            )
 
-            # Handle missing or negative profitability values
-            aggregated_df['profitability'] = aggregated_df['profitability'].where(aggregated_df['profitability'] >= 0)
-            aggregated_df['profitability'] = aggregated_df['profitability'].fillna(
-                aggregated_df['profitability'].mean())
             aggregated_df['power_price_ratio'] = aggregated_df['power_price_ratio'].where(
                 aggregated_df['power_price_ratio'] >= 0)
             aggregated_df['power_price_ratio'] = aggregated_df['power_price_ratio'].fillna(
                 aggregated_df['power_price_ratio'].mean())
+            ratio_hourly_df = get_hourly_values(aggregated_df)
 
-            # Resample data to hourly frequency and calculate mean values
-            cost_hourly_df = get_hourly_values(aggregated_df)
-            cost = cost_hourly_df['profitability'].sum()  # Total profitability
-
-            # Convert time to Helsinki time zone
-            cost_hourly_df = to_helsinki_time(cost_hourly_df)
-
-            st.write(f'<h2>Profitability (€/h)</h2>', unsafe_allow_html=True)
-            st.line_chart(cost_hourly_df['profitability'])
-            st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
-            st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
+            # Add column from profitability dataframe. Both dataframes have the same timestamps.
+            ratio_hourly_df['total_profitability'] = cost_hourly_df['total_profitability']
 
             # Normalize the lines for line chart
             scaler = MinMaxScaler()
-            lines = ['profitability', 'power_price_ratio']
-            cost_hourly_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-            cost_hourly_df[lines] = cost_hourly_df[lines].fillna(0)
-            cost_hourly_df[lines] = scaler.fit_transform(cost_hourly_df[lines])
-            cost_hourly_df = to_helsinki_time(cost_hourly_df)
+            normalized_lines = ['total_profitability', 'power_price_ratio']
+            ratio_hourly_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+            ratio_hourly_df[normalized_lines] = ratio_hourly_df[normalized_lines].fillna(0)
+            ratio_hourly_df[normalized_lines] = scaler.fit_transform(ratio_hourly_df[normalized_lines])
+            ratio_hourly_df = to_helsinki_time(ratio_hourly_df)
 
-            st.write(f'<h2>Profitability and Cost-effectiveness</h2>', unsafe_allow_html=True)
-            st.line_chart(cost_hourly_df[lines])
-
-            # Additional statistics
-            st.write('### Statistics')
-            st.write(cost_hourly_df['profitability'].describe())
-            st.write(cost_hourly_df['power_price_ratio'].describe())
+            ratio_hourly_df[normalized_lines] = ratio_hourly_df[normalized_lines]
+            st.write(f'<h2>Cost-effectiveness and Profitability (€/h)</h2>', unsafe_allow_html=True)
+            st.line_chart(ratio_hourly_df[normalized_lines])
+            st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
+            st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
