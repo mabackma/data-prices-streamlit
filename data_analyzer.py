@@ -72,6 +72,9 @@ def get_hourly_values(df):
     numeric_cols = df.select_dtypes(include='number').columns
     numeric_df = df[numeric_cols]
 
+    if st.session_state.hide_interruptions:
+        numeric_df[numeric_cols] = numeric_df[numeric_cols].fillna(0)
+
     # Resample the data to hourly frequency and compute the mean
     hourly_df = numeric_df.resample('h').mean()
 
@@ -166,18 +169,21 @@ class DataAnalyzer:
                 # Normalize selected columns
                 scaler = MinMaxScaler()
                 if len(lines) > 0:
-                    st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
-                    st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
-                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
-                    if not st.checkbox("Show interruptions"):
-                        location_df[lines] = location_df[lines].fillna(0)
                     location_df[lines] = scaler.fit_transform(location_df[lines])
                     location_df = to_helsinki_time(location_df)
 
+                    st.write(f'<h2>{location_names[location]}</h2>', unsafe_allow_html=True)
+                    st.write(f'<h4>meter_id: {location}</h4>', unsafe_allow_html=True)
+                    st.write(f'<h4>Time range: {start} - {end}</h4>', unsafe_allow_html=True)
+
+                    # When checked, lines will contain None values, otherwise None values are set to 0
+                    if st.checkbox("Hide interruptions"):
+                        st.session_state.hide_interruptions = True
+                    else:
+                        st.session_state.hide_interruptions = False
+
                     # Get hourly values
                     hourly_df = get_hourly_values(location_df)
-
-                    # Draw the line chart
                     st.line_chart(hourly_df[lines])
                 else:
                     st.write('Choose columns to draw line chart')
