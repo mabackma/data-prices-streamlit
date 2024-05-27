@@ -259,8 +259,7 @@ class DataAnalyzer:
             else:
                 lines = [col for col in profitability_df.columns if col != 'ts']
                 if len(lines) > 0:
-                    #profitability_df[lines] = profitability_df[lines].where(profitability_df[lines] >= 0)
-                    #profitability_df[lines] = profitability_df[lines].fillna(profitability_df[lines].mean())
+                    profitability_df[lines] = profitability_df[lines].where(profitability_df[lines] >= 0)
 
                     # Get hourly values
                     hourly_df = get_hourly_values(profitability_df)
