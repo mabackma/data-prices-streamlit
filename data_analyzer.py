@@ -295,6 +295,7 @@ class DataAnalyzer:
             cost_pivot_df = cost_df.pivot_table(index='ts', columns='meter_id', values='profitability')
 
             lines = [col for col in cost_pivot_df.columns if col != 'ts']
+            cost_pivot_df[lines] = cost_pivot_df[lines].where(cost_pivot_df[lines] >= 0)
             cost_hourly_df = get_hourly_values(cost_pivot_df)
             cost_hourly_df['total_profitability'] = cost_hourly_df[lines].sum(axis=1, skipna=True)
             cost = cost_hourly_df['total_profitability'].sum()  # Total profitability
