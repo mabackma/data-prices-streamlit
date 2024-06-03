@@ -325,23 +325,15 @@ class DataAnalyzer:
 
             # Create Cost-effectiveness dataframe (power / price)
             ratio_df = self.dataframe.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).select(
-                ['ts', 'total_active_power', 'price'])
-
-            # Aggregate total_active_power by summing
-            aggregated_df = ratio_df.groupby('ts').agg([
-                pl.col('total_active_power').sum().alias('total_active_power'),
-                pl.col('price').mean().alias('price')
-            ])
-
-            # Make column for Cost-effectiveness (power / price)
-            aggregated_df = aggregated_df.with_columns([
-                (pl.col('total_active_power') / pl.col('price')).alias('power_price_ratio')
-            ]).to_pandas()
-            aggregated_df['ts'] = pd.to_datetime(aggregated_df['ts'])
-            aggregated_df.set_index('ts', inplace=True)
+                ['ts', 'total_active_power', 'price']).to_pandas()
+            ratio_df['ts'] = pd.to_datetime(ratio_df['ts'])
+            ratio_df.set_index('ts', inplace=True)
 
             # Get hourly values
-            ratio_hourly_df = get_hourly_values(aggregated_df)
+            ratio_hourly_df = get_hourly_values(ratio_df)
+
+            # Make column for Cost-effectiveness (power / price)
+            ratio_hourly_df['power_price_ratio'] = ratio_hourly_df['total_active_power'] / ratio_hourly_df['price']
 
             # Merge both of the dataframes on the timestamp column
             ratio_hourly_df = pd.merge(ratio_hourly_df, cost_hourly_df[['total_profitability']], left_index=True,
