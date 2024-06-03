@@ -348,7 +348,7 @@ class DataAnalyzer:
             ratio_hourly_df = to_helsinki_time(ratio_hourly_df)
 
             # Draw the line chart
-            st.write(f'<h2>Cost-effectiveness and Profitability (€/h)</h2>', unsafe_allow_html=True)
+            st.write(f'<h2>Cost-effectiveness and Profitability</h2>', unsafe_allow_html=True)
             st.line_chart(ratio_hourly_df[normalized_lines])
             st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
             st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
