@@ -82,11 +82,11 @@ def get_hourly_values_fill_none(df):
     numeric_cols = df.select_dtypes(include='number').columns
     numeric_df = df[numeric_cols]
 
-    # Fill null values with the mean
-    numeric_df[numeric_cols] = numeric_df[numeric_cols].fillna(numeric_df[numeric_cols].mean())
-
     # Resample the data to hourly frequency and compute the mean
     hourly_df = numeric_df.resample('h').mean()
+
+    # Fill null values with the mean
+    hourly_df[numeric_cols] = hourly_df[numeric_cols].fillna(hourly_df[numeric_cols].mean())
     return hourly_df
 
 
