@@ -137,7 +137,9 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
             df_all = scan_large_parquet(uploaded_file)
 
         st.success('File successfully read!')
+        st.write(df_all.head())
 
+    if 1 == 2:
         total_columns = []
         data_columns = []
         for col in df_all.columns:
