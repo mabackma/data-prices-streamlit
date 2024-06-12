@@ -116,7 +116,7 @@ def choose_time_interval():
 @st.cache_data
 def scan_large_parquet(file):
     df_scan = pl.read_parquet(file)
-    return df_scan.head(1000)
+    return df_scan
 
 
 st.set_page_config(layout="wide")
@@ -124,7 +124,6 @@ initialize_state()
 
 if st.session_state.analyzer_L is None and st.session_state.analyzer_total is None:
     # File uploader for parquet file
-    st.write("Updated 12.6.2024")
     st.write('<h3>Place your parquet file here</h3>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Choose a file", type=["parquet"])
 
