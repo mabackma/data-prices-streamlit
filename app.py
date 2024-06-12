@@ -116,7 +116,7 @@ def choose_time_interval():
 @st.cache_data
 def scan_large_parquet(file):
     df_scan = pl.read_parquet(file)
-    return df_scan
+    return df_scan.head(1000)
 
 
 st.set_page_config(layout="wide")
