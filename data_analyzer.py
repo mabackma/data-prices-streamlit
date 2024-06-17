@@ -20,8 +20,8 @@ def callback_heatmap():
     st.session_state.heatmap_button_clicked = True
 
 
-def callback_profitability():
-    st.session_state.profitability_button_clicked = True
+def callback_expenses():
+    st.session_state.expenses_button_clicked = True
 
 
 # Replace any characters that are not allowed in a filename
@@ -157,7 +157,7 @@ class DataAnalyzer:
         sensors = []
         for i, sensor in enumerate(location_df.columns, start=-2):
             with cols[i % number_of_columns]:
-                if sensor != 'ts' and sensor != 'meter_id' and sensor != 'profitability' and sensor != 'power_price_ratio':
+                if sensor != 'ts' and sensor != 'meter_id' and sensor != 'expenses' and sensor != 'power_to_price_ratio':
                     if st.checkbox(sensor):
                         sensors.append(sensor)
 
@@ -229,14 +229,14 @@ class DataAnalyzer:
             else:
                 st.write('Choose another time range')
 
-    # Creates a pivot table with the chosen meter_id's as columns and profitability as their values.
-    def prepare_profitability_df(self, start, end):
+    # Creates a pivot table with the chosen meter_id's as columns and expenses as their values.
+    def prepare_expenses_df(self, start, end):
         query_string = f"""
-            SELECT ts, meter_id, profitability
+            SELECT ts, meter_id, expenses
             FROM self
             WHERE ts >= '{start}' AND ts < '{end}'
         """
-        profitability_df = self.dataframe.sql(query_string)
+        expenses_df = self.dataframe.sql(query_string)
 
         cols = st.columns(5)
         locations = []
@@ -247,66 +247,66 @@ class DataAnalyzer:
 
         # Filter the dataframe for the selected locations
         if locations:
-            profitability_df = profitability_df.filter(pl.col('meter_id').is_in(locations))
+            expenses_df = expenses_df.filter(pl.col('meter_id').is_in(locations))
         else:
-            profitability_df = pl.DataFrame()
+            expenses_df = pl.DataFrame()
 
         # Convert to pandas before drawing line chart
-        profitability_df = profitability_df.to_pandas()
+        expenses_df = expenses_df.to_pandas()
 
-        if not profitability_df.empty:
-            # Pivot the dataframe to have a column for each location's profitability
-            profitability_pivot_df = profitability_df.pivot_table(index='ts', columns='meter_id',
-                                                                  values='profitability')
+        if not expenses_df.empty:
+            # Pivot the dataframe to have a column for each location's expenses
+            expenses_pivot_df = expenses_df.pivot_table(index='ts', columns='meter_id',
+                                                                  values='expenses')
             # Rename the columns to include the location names
-            profitability_pivot_df.rename(columns=location_names, inplace=True)
+            expenses_pivot_df.rename(columns=location_names, inplace=True)
         else:
-            profitability_pivot_df = pd.DataFrame()
+            expenses_pivot_df = pd.DataFrame()
 
-        return profitability_pivot_df
+        return expenses_pivot_df
 
-    # Plots profitability (power * price) for individual meter_id and plots their total profitability.
+    # Plots expenses (power * price) for individual meter_id and plots their total expenses.
     # Calculates the total cost for the chosen meters
-    def profitability_line_chart(self, start, end):
-        profitability_df = self.prepare_profitability_df(start, end)
+    def expenses_line_chart(self, start, end):
+        expenses_df = self.prepare_expenses_df(start, end)
 
-        if not st.session_state.profitability_button_clicked:
-            st.button('Click here to see profitability line charts', on_click=callback_profitability)
-        if st.session_state.profitability_button_clicked:
+        if not st.session_state.expenses_button_clicked:
+            st.button('Click here to see expenses line charts', on_click=callback_expenses)
+        if st.session_state.expenses_button_clicked:
             # Check if there are any selected locations
-            if profitability_df.empty:
+            if expenses_df.empty:
                 st.write("No data available for the selected time range.")
                 return
             else:
-                lines = [col for col in profitability_df.columns if col != 'ts']
+                lines = [col for col in expenses_df.columns if col != 'ts']
                 if len(lines) > 0:
-                    # Keep only positive values
-                    profitability_df[lines] = profitability_df[lines].where(profitability_df[lines] >= 0)
+                    # Keep only positive values for the expenses
+                    #expenses_df[lines] = expenses_df[lines].where(expenses_df[lines] >= 0)
 
                     # Get hourly values
-                    hourly_df = get_hourly_values(profitability_df)
+                    hourly_df = get_hourly_values(expenses_df)
 
-                    # Add column for total profitability
-                    hourly_df['total_profitability'] = hourly_df[lines].sum(axis=1, skipna=True)
+                    # Add column for total expenses
+                    hourly_df['total_expenses'] = hourly_df[lines].sum(axis=1, skipna=True)
                     hourly_df = to_helsinki_time(hourly_df)
 
                     # Calculate the total cost
-                    cost = hourly_df['total_profitability'].sum()
+                    cost = hourly_df['total_expenses'].sum()
 
                     # Draw the line chart
-                    st.write(f'<h3>Profitability (€/h)</h3', unsafe_allow_html=True)
+                    st.write(f'<h3>Expenses (€/h)</h3', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
-                    st.write(f'<h3>Total profitability (€/h)</h3>', unsafe_allow_html=True)
-                    st.line_chart(hourly_df['total_profitability'])
+                    st.write(f'<h3>Total expenses (€/h)</h3>', unsafe_allow_html=True)
+                    st.line_chart(hourly_df['total_expenses'])
                     st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
                     st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
                 else:
                     st.write('Choose columns to draw line chart')
 
-    # Plots Cost-effectiveness (power / price) and profitability (power * price)
+    # Plots Cost-effectiveness (power / price) and expenses (power * price)
     # Calculates the total cost for all meters
     def cost_effectiveness(self, start, end):
-        # Profitability dataframe (power * price)
+        # Expenses dataframe (power * price)
         cost_df = self.dataframe.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).to_pandas()
         cost_df['ts'] = pd.to_datetime(cost_df['ts'])
         cost_df.set_index('ts', inplace=True)
@@ -315,15 +315,27 @@ class DataAnalyzer:
             st.write("No data available for the selected time range.")
             return
         else:
-            # Pivot the dataframe to have a column for each location's profitability
-            cost_pivot_df = cost_df.pivot_table(index='ts', columns='meter_id', values='profitability')
+            # Pivot the dataframe to have a column for each location's expenses
+            cost_pivot_df = cost_df.pivot_table(index='ts', columns='meter_id', values='expenses')
 
             lines = [col for col in cost_pivot_df.columns if col != 'ts']
-            # Keep only positive values
+
+            # Keep only negative values for the profits
+            profitability_df = cost_pivot_df[lines].where(cost_pivot_df[lines] < 0)
+            profitability_hourly_df = get_hourly_values(profitability_df)
+            profitability_hourly_df['total_profit'] = profitability_hourly_df[lines].sum(axis=1, skipna=True)
+            profitability_hourly_df['total_profit'] = profitability_hourly_df['total_profit'] * (-1)
+            profit = profitability_hourly_df['total_profit'].sum()  # Total expenses
+
+            cost_hourly_df = get_hourly_values(cost_pivot_df)
+            cost_hourly_df['total_expenses'] = cost_hourly_df[lines].sum(axis=1, skipna=True)
+            real_cost = cost_hourly_df['total_expenses'].sum()  # Total expenses
+
+            # Keep only positive values for the expenses
             cost_pivot_df[lines] = cost_pivot_df[lines].where(cost_pivot_df[lines] >= 0)
             cost_hourly_df = get_hourly_values(cost_pivot_df)
-            cost_hourly_df['total_profitability'] = cost_hourly_df[lines].sum(axis=1, skipna=True)
-            cost = cost_hourly_df['total_profitability'].sum()  # Total profitability
+            cost_hourly_df['total_expenses'] = cost_hourly_df[lines].sum(axis=1, skipna=True)
+            cost = cost_hourly_df['total_expenses'].sum()  # Total expenses
 
             # Create Cost-effectiveness dataframe (power / price)
             ratio_df = self.dataframe.filter((pl.col('ts') >= start) & (pl.col('ts') < end)).select(
@@ -335,22 +347,29 @@ class DataAnalyzer:
             ratio_hourly_df = get_hourly_values(ratio_df)
 
             # Make column for Cost-effectiveness (power / price)
-            ratio_hourly_df['power_price_ratio'] = ratio_hourly_df['total_active_power'] / ratio_hourly_df['price']
+            ratio_hourly_df['power_to_price_ratio'] = ratio_hourly_df['total_active_power'] / ratio_hourly_df['price']
 
-            # Merge both of the dataframes on the timestamp column
-            ratio_hourly_df = pd.merge(ratio_hourly_df, cost_hourly_df[['total_profitability']], left_index=True,
+            # Merge all the dataframes on the timestamp column
+            ratio_hourly_df = pd.merge(ratio_hourly_df, cost_hourly_df[['total_expenses']], left_index=True,
+                                       right_index=True)
+            ratio_hourly_df = pd.merge(ratio_hourly_df, profitability_hourly_df[['total_profit']], left_index=True,
                                        right_index=True)
 
             # Normalize the lines for line chart
             scaler = MinMaxScaler()
-            normalized_lines = ['total_profitability', 'power_price_ratio']
+            normalized_lines = ['total_expenses', 'total_profit', 'power_to_price_ratio']
             ratio_hourly_df.replace([np.inf, -np.inf], np.nan, inplace=True)
             ratio_hourly_df[normalized_lines] = ratio_hourly_df[normalized_lines].fillna(0)
             ratio_hourly_df[normalized_lines] = scaler.fit_transform(ratio_hourly_df[normalized_lines])
             ratio_hourly_df = to_helsinki_time(ratio_hourly_df)
 
             # Draw the line chart
-            st.write(f'<h2>Cost-effectiveness and Profitability</h2>', unsafe_allow_html=True)
+            st.write(f'<h2>Profitability and Expenses</h2>', unsafe_allow_html=True)
             st.line_chart(ratio_hourly_df[normalized_lines])
-            st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
-            st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
+            st.write(f'<h3>Overview of Electricity Expenses for {start} - {end}:</h3>', unsafe_allow_html=True)
+            st.write(f'<h5>Total from Hourly Expenses: {cost:.2f} €</h5>', unsafe_allow_html=True)
+            st.write(f'<h5>Total from Hourly Profit: {profit:.2f} €</h5>', unsafe_allow_html=True)
+            st.write(f'<h5>Total Cost: {real_cost:.2f} €</h5>', unsafe_allow_html=True)
+            st.write(f'<h5></h5>', unsafe_allow_html=True)
+            st.write(f'<h5>Calculation:</h5>', unsafe_allow_html=True)
+            st.write(f'<h5>{cost:.2f} - {profit:.2f} = {(cost - profit):.2f} ≈ {real_cost:.2f} €</h5>', unsafe_allow_html=True)

@@ -12,8 +12,8 @@ def initialize_state():
         st.session_state.line_chart_button_clicked = False
     if "heatmap_button_clicked" not in st.session_state:
         st.session_state.heatmap_button_clicked = False
-    if "profitability_button_clicked" not in st.session_state:
-        st.session_state.profitability_button_clicked = False
+    if "expenses_button_clicked" not in st.session_state:
+        st.session_state.expenses_button_clicked = False
     if "analyzer_L" not in st.session_state:
         st.session_state.analyzer_L = None
     if "analyzer_total" not in st.session_state:
@@ -29,7 +29,7 @@ def choose_dataframe():
 
 
 def show_options():
-    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap', 'Profitability',
+    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap', 'Expenses',
                'Cost-effectiveness']
     selected_option = st.radio('Select Action', list(options))
     return selected_option
@@ -162,7 +162,7 @@ if st.session_state.analyzer_L is None and st.session_state.analyzer_total is No
 
         # Prices are in EUR / MWh and total_active_power is in W, so divide by 1 000 000 to get EUR / h
         df_total = df_total.with_columns(
-            ((pl.col('total_active_power') * pl.col('price'))/1000000).alias('profitability'))
+            ((pl.col('total_active_power') * pl.col('price'))/1000000).alias('expenses'))
 
         st.session_state.analyzer_L = DataAnalyzer(df_L1_L2_L3, 'L')
         st.session_state.analyzer_total = DataAnalyzer(df_total, 'Total')
@@ -192,8 +192,8 @@ else:
             st.session_state.line_chart_button_clicked = False
         if action != 'Heatmap':
             st.session_state.heatmap_button_clicked = False
-        if action != 'Profitability':
-            st.session_state.profitability_button_clicked = False
+        if action != 'Expenses':
+            st.session_state.expenses_button_clicked = False
         if action == 'List columns':
             st.write('<h3>Columns in the DataFrame:</h3>', unsafe_allow_html=True)
             analyzer.list_columns()
@@ -215,12 +215,12 @@ else:
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.draw_heatmaps(location, start_time, end_time)
-        if action == 'Profitability':
+        if action == 'Expenses':
             if chosen_dataframe == 'L1, L2, L3 values':
-                st.write('Profitability not available for this dataframe')
+                st.write('Expenses not available for this dataframe')
             else:
                 start_time, end_time = choose_time_interval()
-                analyzer.profitability_line_chart(start_time, end_time)
+                analyzer.expenses_line_chart(start_time, end_time)
         if action == 'Cost-effectiveness':
             if chosen_dataframe == 'L1, L2, L3 values':
                 st.write('Cost-effectiveness not available for this dataframe')
