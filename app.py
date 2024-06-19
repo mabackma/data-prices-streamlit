@@ -29,7 +29,7 @@ def choose_dataframe():
 
 
 def show_options():
-    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap', 'Expenses',
+    options = ['', 'List columns', 'Sample', 'Describe', 'SQL query', 'Line chart', 'Heatmap', 'Net Expenses',
                'Cost-effectiveness']
     selected_option = st.radio('Select Action', list(options))
     return selected_option
@@ -192,7 +192,7 @@ else:
             st.session_state.line_chart_button_clicked = False
         if action != 'Heatmap':
             st.session_state.heatmap_button_clicked = False
-        if action != 'Expenses':
+        if action != 'Net Expenses':
             st.session_state.expenses_button_clicked = False
         if action == 'List columns':
             st.write('<h3>Columns in the DataFrame:</h3>', unsafe_allow_html=True)
@@ -215,9 +215,9 @@ else:
             start_time, end_time = choose_time_interval()
             if location is not None:
                 analyzer.draw_heatmaps(location, start_time, end_time)
-        if action == 'Expenses':
+        if action == 'Net Expenses':
             if chosen_dataframe == 'L1, L2, L3 values':
-                st.write('Expenses not available for this dataframe')
+                st.write('Net expenses not available for this dataframe')
             else:
                 start_time, end_time = choose_time_interval()
                 analyzer.expenses_line_chart(start_time, end_time)

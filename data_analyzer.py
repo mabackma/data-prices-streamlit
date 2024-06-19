@@ -6,7 +6,8 @@ import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
 from dictionaries import location_names, units
-
+import time
+import os
 
 def callback_query():
     st.session_state.query_button_clicked = True
@@ -22,6 +23,15 @@ def callback_heatmap():
 
 def callback_expenses():
     st.session_state.expenses_button_clicked = True
+
+
+# Function to remove files older than a certain age
+def remove_old_files(directory, age_in_seconds):
+    now = time.time()
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        if os.path.isfile(file_path) and now - os.path.getmtime(file_path) > age_in_seconds:
+            os.remove(file_path)
 
 
 # Replace any characters that are not allowed in a filename
@@ -112,6 +122,8 @@ class DataAnalyzer:
     def __init__(self, dataframe, dataframe_type):
         self.dataframe = dataframe
         self.dataframe_type = dataframe_type
+        self.query_dir = pathlib.Path('./query_files/')
+        self.cleanup_interval = 3600  # 1 hour
 
     def list_columns(self):
         for column in self.dataframe.columns:
@@ -126,6 +138,9 @@ class DataAnalyzer:
     # Makes a query to the dataframe and saves the result in a parquet file
     # The filename is the query string
     def query_with_sql(self):
+        # Cleanup old files every time the query is run
+        remove_old_files(self.query_dir, self.cleanup_interval)
+
         query_string = st.text_input('Enter the SQL query:')
 
         if not st.session_state.query_button_clicked:
@@ -145,6 +160,18 @@ class DataAnalyzer:
             st.write('<h3>Result of SQL query:</h3>', unsafe_allow_html=True)
             st.write(result.head())
             st.write(f"Number of rows: {result.height}")
+
+            # Load the data from the parquet file for downloading
+            with open(path, "rb") as f:
+                data = f.read()
+
+            # Create a download button
+            st.download_button(
+                label="Download result as Parquet file",
+                data=data,
+                file_name=path.name,
+                mime="application/octet-stream"
+            )
 
     # Returns the dataframe for a chosen meter_id and its chosen sensors
     def prepare_dataframe(self, location, start, end):
@@ -294,9 +321,9 @@ class DataAnalyzer:
                     cost = hourly_df['total_expenses'].sum()
 
                     # Draw the line chart
-                    st.write(f'<h3>Expenses (€/h)</h3', unsafe_allow_html=True)
+                    st.write(f'<h3>Net expenses (€/h)</h3', unsafe_allow_html=True)
                     st.line_chart(hourly_df[lines])
-                    st.write(f'<h3>Total expenses (€/h)</h3>', unsafe_allow_html=True)
+                    st.write(f'<h3>Total net expenses (€/h)</h3>', unsafe_allow_html=True)
                     st.line_chart(hourly_df['total_expenses'])
                     st.write(f'<h4>Total cost of electricity during {start} - {end}:</h4>', unsafe_allow_html=True)
                     st.write(f'<h4>{cost:.2f} €</h4>', unsafe_allow_html=True)
