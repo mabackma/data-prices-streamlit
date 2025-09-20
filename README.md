@@ -2,7 +2,7 @@
 
 This Streamlit application analyzes electricity data from the sensors at the Sunday Morning Resort microgrid. 
 
-Read [PDF File](https://github.com/mabackma/data-prices-streamlit/blob/main/Streamlit_analyzer.pdf) for more information about this project.
+Read the [PDF File](https://github.com/mabackma/data-prices-streamlit/blob/main/Streamlit_analyzer.pdf) for more information on this project.
 
 # Install Python modules:
 ### pip install -r requirements.txt
